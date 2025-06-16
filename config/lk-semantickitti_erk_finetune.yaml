@@ -90,6 +90,9 @@ dataset_params:
     mix_aug: True
     instance_aug: False
     d_point_num: 80000
+    SphereCrop: True
+    ShufflePoint: False
+
 
   val_data_loader:
     data_path: "./dataset/SemanticKitti/sequences/"
@@ -111,17 +114,17 @@ dataset_params:
 train_params:
   seed: 1588147245
   max_num_epochs: 30
-  learning_rate: 0.0002
-  optimizer: SGD # [SGD, Adam, AdamW]
-  lr_scheduler: StepLR  # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
+  learning_rate: 0.02 #0.0002
+  optimizer: AdamW # [SGD, Adam, AdamW]
+  lr_scheduler: ReduceLROnPlateau  # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
   momentum: 0.9
   weight_decay: 1.0e-4
   nesterov: True
   lambda_lovasz: 1
   decay_step: 1
   decay_rate: 0.5
-  eval_every_n_steps: 299 #683 #597 #1195
-  distributed: False
+  eval_every_n_steps: 1195 #299 #683 #597 #1195
+  distributed: True
   amp_enabled: False
 
 ###################

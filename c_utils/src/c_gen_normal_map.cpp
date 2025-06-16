@@ -5,12 +5,15 @@
 
 namespace py = pybind11;
 
-int wrap(int x, int dim) {
+int wrap(int x, int dim)
+{
     int value = x;
-    if (value >= dim) {
+    if (value >= dim)
+    {
         value = value - dim;
     }
-    if (value < 0) {
+    if (value < 0)
+    {
         value = value + dim;
     }
     return value;
@@ -19,8 +22,8 @@ int wrap(int x, int dim) {
 py::array_t<float> gen_normal_map(const py::array_t<float> &range,
                                   const py::array_t<float> &vertex,
                                   const int H,
-                                  const int W
-                                  ) {
+                                  const int W)
+{
     pybind11::buffer_info buf1 = range.request();
     pybind11::buffer_info buf2 = vertex.request();
 
@@ -34,27 +37,32 @@ py::array_t<float> gen_normal_map(const py::array_t<float> &range,
     auto *normal_map = (float *)buf3.ptr;
 
 #pragma omp parallel for
-    for (int i = 0; i < H * W * 3; ++i) {
+    for (int i = 0; i < H * W * 3; ++i)
+    {
         normal_map[i] = 0;
     }
 
 #pragma omp parallel
     {
 #pragma omp for nowait collapse(2)
-        for (int x = 0; x < W; ++x) {
-            for (int y = 0; y < H - 1; ++y) {
+        for (int x = 0; x < W; ++x)
+        {
+            for (int y = 0; y < H - 1; ++y)
+            {
                 const float &px = vertex_map[y * W * 3 + x * 3];
                 const float &py = vertex_map[y * W * 3 + x * 3 + 1];
                 const float &pz = vertex_map[y * W * 3 + x * 3 + 2];
                 const float &depth = depth_buffer[y * W + x];
 
-                if (depth > 0) {
+                if (depth > 0)
+                {
                     int wrap_x = wrap(x + 1, W);
                     const float &ux = vertex_map[y * W * 3 + wrap_x * 3];
                     const float &uy = vertex_map[y * W * 3 + wrap_x * 3 + 1];
                     const float &uz = vertex_map[y * W * 3 + wrap_x * 3 + 2];
                     const float &u_depth = depth_buffer[y * W + wrap_x];
-                    if (u_depth <= 0) {
+                    if (u_depth <= 0)
+                    {
                         continue;
                     }
 
@@ -62,7 +70,8 @@ py::array_t<float> gen_normal_map(const py::array_t<float> &range,
                     const float &vy = vertex_map[(y + 1) * W * 3 + x * 3 + 1];
                     const float &vz = vertex_map[(y + 1) * W * 3 + x * 3 + 2];
                     const float &v_depth = depth_buffer[(y + 1) * W + x];
-                    if (v_depth <= 0) {
+                    if (v_depth <= 0)
+                    {
                         continue;
                     }
 
@@ -92,7 +101,8 @@ py::array_t<float> gen_normal_map(const py::array_t<float> &range,
                                       crossz * crossz);
 
 #pragma omp critical
-                    if (norm > 0) {
+                    if (norm > 0)
+                    {
                         const float normalx = crossx / norm;
                         const float normaly = crossy / norm;
                         const float normalz = crossz / norm;
@@ -110,8 +120,8 @@ py::array_t<float> gen_normal_map(const py::array_t<float> &range,
     return normal_map_buffer;
 }
 
-PYBIND11_MODULE(c_gen_normal_map, m) {
+PYBIND11_MODULE(c_gen_normal_map, m)
+{
     m.doc() = "generate normal map using pybind11";
     m.def("gen_normal_map", &gen_normal_map, "generate normal map");
 }
-

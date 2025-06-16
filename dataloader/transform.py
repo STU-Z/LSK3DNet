@@ -1,3 +1,11 @@
+'''
+Author: Zhangrunbang 254616730@qq.com
+Date: 2025-05-30 14:16:10
+LastEditors: Zhangrunbang 254616730@qq.com
+LastEditTime: 2025-05-30 14:16:10
+FilePath: /LSK3DNet/dataloader/transform.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 import random
 import numbers
 import scipy
@@ -72,7 +80,9 @@ class Compose(object):
     def __init__(self, cfg=None):
         self.cfg = cfg if cfg is not None else []
         self.transforms = []
-
+        print(' ------ in compose ------ ')
+        print("self.cfg['SphereCrop']: ",self.cfg['SphereCrop'])
+        print("self.cfg['ShufflePoint']: ",self.cfg['ShufflePoint'])
         if self.cfg['SphereCrop']:
             self.transforms.append(SphereCrop(point_max=self.cfg['d_point_num'], mode="random"))
         if self.cfg['ShufflePoint']:

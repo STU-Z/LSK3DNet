@@ -1,3 +1,11 @@
+<!--
+ * @Author: Zhangrunbang 254616730@qq.com
+ * @Date: 2025-05-21 20:34:12
+ * @LastEditors: Zhangrunbang 254616730@qq.com
+ * @LastEditTime: 2025-05-21 20:34:12
+ * @FilePath: /LSK3DNet/c_utils/README.md
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 ## C++ library for fast generating of normal and range images
 
 We implemented the generation of depth and normal maps in C++. In order to call it from python, we are
@@ -33,4 +41,7 @@ one needs to specify the path of the library by:
 
 ```
 export PYTHONPATH=$PYTHONPATH:<path-to-library>
+```
+```
+export PYTHONPATH=$PYTHONPATH:/media/zrb/Elements/Git_code/LSK3DNet/c_utils/build
 ```

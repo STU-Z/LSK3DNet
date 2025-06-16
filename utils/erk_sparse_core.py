@@ -13,6 +13,9 @@ class CosineDecay(object):
 
     This class is just a wrapper around PyTorch's CosineAnnealingLR.
     """
+    """ 
+    用于按照余弦退火 Cosine Annealing策略动态调整剪枝率 prune rate 让稀疏化过程更加平滑。
+    """
     def __init__(self, prune_rate, T_max, eta_min=0.005, last_epoch=-1, init_step=0):
         self.sgd = optim.SGD(torch.nn.ParameterList([torch.nn.Parameter(torch.zeros(1))]), lr=prune_rate)
         self.cosine_stepper = torch.optim.lr_scheduler.CosineAnnealingLR(self.sgd, T_max, eta_min, last_epoch)
@@ -63,6 +66,7 @@ class Masking(object):
         self.names = []
         self.optimizer = optimizer
         self.scaler = scaler
+        # Masking 里的 optimizer 和 scaler 与你传入的是同一个对象，是共用的
         self.baseline_nonzero = None
 
         # stats
@@ -82,6 +86,13 @@ class Masking(object):
         self.distributed = distributed
 
         # self.kernel_size = 9 # [0,3,0,3,0,3] k1 k2 k3
+        '''
+          spatial_group_partition: # 空间分组的分界点
+            - 0
+            - 3
+            - 6
+            - 9
+        '''
         self.group_num = len(spatial_partition) - 1
         self.start_end_map = {}
         for i in range(self.group_num):
@@ -108,15 +119,15 @@ class Masking(object):
         self.module = module
         if pre_masks == None:
             for name, tensor in module.named_parameters():
-                if len(tensor.size()) == 5:
+                if len(tensor.size()) == 5:# 目的是为了将只有5维的卷积核参数会被空间分组掩码处理，其他参数（如线性层、BN等）不会被影响
                     if '.layers.' in name:
-                        # print(tensor.shape)
+                        print(tensor.shape)
                         self.names.append(name)
                         one_kernel_mask_map_dict = {}
-
+                        # assert index_ten[1] <= tensor.shape[2] and index_ten[3] <= tensor.shape[3] and index_ten[5] <= tensor.shape[4]
                         for ind in range(len(self.group_map)):
                             index_ten = self.group_map[ind]
-                            one_kernel_mask_map_dict[ind] = torch.zeros_like(tensor[index_ten[0]:index_ten[1], 
+                            one_kernel_mask_map_dict[ind] = torch.zeros_like(tensor[index_ten[0]:index_ten[1],  #取tensor切片
                                                                     index_ten[2]:index_ten[3],
                                                                     index_ten[4]:index_ten[5]], 
                                                             dtype=torch.float32, 
@@ -281,7 +292,7 @@ class Masking(object):
     def step(self):
         if self.half:
             self.apply_mask()
-        else:
+        else:  # 未使用混合精度
             self.optimizer.step()
             self.apply_mask()
 
@@ -311,6 +322,7 @@ class Masking(object):
                         tensor.data[index_ten[0]:index_ten[1], index_ten[2]:index_ten[3], index_ten[4]:index_ten[5]] = \
                             tensor.data[index_ten[0]:index_ten[1], index_ten[2]:index_ten[3], index_ten[4]:index_ten[5]]*self.masks[name_1][name_2]
                         if 'momentum_buffer' in self.optimizer.state[tensor]:
+                            # 这句代码确保被剪枝的参数在动量优化器中的动量值也被强制归零，保证稀疏性不会被动量机制破坏。
                             self.optimizer.state[tensor]['momentum_buffer'][index_ten[0]:index_ten[1], index_ten[2]:index_ten[3], index_ten[4]:index_ten[5]] = \
                                 self.optimizer.state[tensor]['momentum_buffer'][index_ten[0]:index_ten[1], index_ten[2]:index_ten[3], index_ten[4]:index_ten[5]]*self.masks[name_1][name_2]
                         # else:
@@ -341,7 +353,25 @@ class Masking(object):
                     new_mask = self.prune_func(self, mask, weight[index_ten[0]:index_ten[1], index_ten[2]:index_ten[3], index_ten[4]:index_ten[5]].contiguous(), name)
                     removed = self.name2nonzeros[name] - new_mask.sum().item()
                     self.name2removed[name] = removed
-                    self.masks[name_1][name_2][:] = new_mask
+                    self.masks[name_1][name_2][:] = new_mask # [:] 的作用是不改变原张量对象，只修改其内容，即原地赋值
+
+                    # 保持张量引用不变的主要作用是确保所有引用该张量的地方都能感知到它的内容变化，而不会因为赋值操作而丢失原有的引用关系。这在 PyTorch 这类深度学习框架中非常重要，原因如下：
+                    # 1. 保证外部引用同步更新
+                    # 如果有其他变量或数据结构（比如优化器的状态、分布式同步、外部监控工具等）持有了对这个张量的引用，
+                    # 原地修改内容（如 [:] = ...）会让所有引用都看到最新的内容。
+                    # 
+                    # 如果直接赋值（如 self.masks[name_1][name_2] = new_mask），
+                    # 
+                    # 只是让字典的 value 指向了一个新的张量对象，
+                    # 其他地方持有的旧张量引用内容不会变，导致数据不同步或失效。
+                    # 2. 避免内存泄漏和引用失效
+                    # 保持引用不变可以避免内存管理上的混乱，防止出现“悬空引用”或内存泄漏。
+                    # 这对于需要长期追踪某个张量内容变化的场景尤其重要。
+                    # 3. 框架兼容性
+                    # PyTorch 的很多底层机制（如参数注册、优化器状态、分布式通信等）都依赖于张量对象的引用不变。
+                    # 原地修改内容可以保证这些机制正常工作。
+                    # 一句话总结：
+                    # 保持张量引用不变，可以让所有引用该张量的地方都实时感知内容变化，保证数据一致性和框架机制的正确性，是深度学习工程中常见且重要的做法。
 
         for module in self.modules:
             for name_1, weight in module.named_parameters():
@@ -381,7 +411,7 @@ class Masking(object):
                 for name_2 in self.masks[name_1].keys():
                     name = name_1 + '/' + str(name_2)
                     mask = self.masks[name_1][name_2]
-                    num_nonzeros = (mask != 0).sum().item()
+                    num_nonzeros = (mask != 0).sum().item() # .item() 把结果从张量转换为Python的标量（int）
                     val = '{0}: {1}->{2}, density: {3:.3f}'.format(name, self.name2nonzeros[name], num_nonzeros,
                                                                 num_nonzeros / float(mask.numel()))
                     print(val)

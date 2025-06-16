@@ -155,3 +155,7 @@ class criterion(nn.Module):
         loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz 
 
         return loss_main
+    
+    # data_dict['logits']：shape 通常为 [N, C]，N 是点的数量，C 是类别数。每一行是一个点属于每个类别的得分（未经过 softmax）。
+    # data_dict['labels']：shape 通常为 [N]，每个元素是对应点的类别标签（整数）。
+    # 损失函数会对每个点分别计算损失，然后求和或平均，作为整体的训练损失。这是点云分割任务的常规做法。

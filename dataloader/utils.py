@@ -1,8 +1,17 @@
+'''
+Author: Zhangrunbang 254616730@qq.com
+Date: 2025-05-23 19:52:16
+LastEditors: Zhangrunbang 254616730@qq.com
+LastEditTime: 2025-05-23 19:55:18
+FilePath: /LSK3DNet/dataloader/utils.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 import numpy as np
 
 instance_classes_kitti = [0, 1, 2, 3, 4, 5, 6, 7]
 
 def swap(pt1, pt2, start_angle, end_angle, label1, label2):
+    # 在两个点云样本之间，按照指定的水平角度区间，交换扇区内的点和标签，实现点云的混合增强，提升模型的泛化能力。这是 Polarmix 等点云增强方法的基础操作之一。
     # calculate horizontal angle for each point
     yaw1 = -np.arctan2(pt1[:, 1], pt1[:, 0])
     yaw2 = -np.arctan2(pt2[:, 1], pt2[:, 0])
@@ -25,6 +34,22 @@ def swap(pt1, pt2, start_angle, end_angle, label1, label2):
     assert pt2_out.shape[0] == label2_out.shape[0]
 
     return pt1_out, pt2_out, label1_out, label2_out
+    # 使用 PolarMix（或类似的扇区混合增强）确实有可能导致如下情况：
+    # 一辆车（或其他物体）的点云被扇区边界截断，一部分被替换成了另一帧的点云，导致单个物体出现“缺失”或“拼接”的现象。
+    # 这样增强后，点云中可能会出现一些不符合真实物理结构的“奇怪形状”。
+    # 为什么还要用这种增强？
+    # 提升模型鲁棒性
+    # 虽然会产生“非真实”的样本，但这能让模型学会在点云缺失、遮挡、拼接等极端情况下也能做出合理判断，提升泛化能力。
+    # 数据多样性
+    # 增强后的数据分布更广，能缓解过拟合，尤其在数据量有限时效果明显。
+    # 实际场景中也常有遮挡/缺失
+    # 真实自动驾驶场景下，点云经常被遮挡或部分丢失，模型需要适应这种情况。
+    # 如何缓解“奇怪形状”带来的负面影响？
+    # PolarMix 通常只对“thing类”（可实例分割的物体，如车、人等）做增强，减少对背景的影响。
+    # 可以通过调整扇区角度、增强概率、只对部分类别做增强等方式，降低对结构的破坏。
+    # 训练时模型会自动学习到哪些特征是“异常”的，推理时一般不会输出这些异常结构。
+    # 总结：
+    # PolarMix 等增强方法确实会带来点云截断和拼接，但这是有意为之，目的是提升模型鲁棒性和泛化能力。只要增强比例合适，通常不会对最终性能造成负面影响，反而能提升模型在复杂场景下的表现。
 
 def rotate_copy(pts, labels, instance_classes, Omega):
     # extract instance points

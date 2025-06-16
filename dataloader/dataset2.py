@@ -122,14 +122,22 @@ class point_semkitti_mix(data.Dataset):
         sig = data['signal']
         origin_len = data['origin_len']
 
-
+        # 单样本预处理（get_single_sample）
+        # 空间裁剪：只保留在指定空间范围内的点。
+        # CutMix/Polarmix：可选的数据混合增强。
+        # 随机丢点：模拟点云稀疏性。
+        # 旋转、翻转、缩放、平移：常规点云增强。
+        # 法向量计算：为每个点计算法向量特征。
+        # 组装输出：将所有特征、标签、索引等打包成字典。
         if self.polarcutmix:
+            #如果启用 polarmix 增强，会随机选取另一个样本，将当前样本和另一个样本在极坐标空间内做混合（polarmix），以增强数据多样性。
             random_integer = np.random.randint(low=0, high=len(self.point_cloud_dataset))
             extra_data, _ = self.point_cloud_dataset[(index+random_integer)%len(self.point_cloud_dataset)]
             # polarmix
             alpha = (np.random.random() - 1) * np.pi
             beta = alpha + np.pi
 
+            # 这个函数作了两个增强， 一是扇区拼接替换，二是进行了指定的角度旋转
             xyz, labels = polarmix(xyz, labels, extra_data['xyz'], extra_data['labels'],
                                       alpha=alpha, beta=beta,
                                       instance_classes=instance_classes,
@@ -139,13 +147,15 @@ class point_semkitti_mix(data.Dataset):
         ref_labels = labels.copy()
         ref_index = np.arange(len(ref_pc))
 
+
+        # 布尔值，逻辑且运算
         mask_x = np.logical_and(xyz[:, 0] > self.min_volume_space[0], xyz[:, 0] < self.max_volume_space[0])
         mask_y = np.logical_and(xyz[:, 1] > self.min_volume_space[1], xyz[:, 1] < self.max_volume_space[1])
         mask_z = np.logical_and(xyz[:, 2] > self.min_volume_space[2], xyz[:, 2] < self.max_volume_space[2])
         mask = np.logical_and(mask_x, np.logical_and(mask_y, mask_z))
 
         if cut_scene:
-            mask *= instance_label != 0
+            mask *= instance_label != 0  # 等价于 mask = mask & (instance_label != 0)，即只有同时满足“在空间范围内”且“实例标签不为0”的点，mask才为True
             
         xyz = xyz[mask]
         # ref_pc = ref_pc[mask]
@@ -157,9 +167,10 @@ class point_semkitti_mix(data.Dataset):
 
         if self.dropout and self.point_cloud_dataset.imageset == 'train':
             dropout_ratio = np.random.random() * self.max_dropout_ratio
-            drop_idx = np.where(np.random.random((xyz.shape[0])) <= dropout_ratio)[0]
+            drop_idx = np.where(np.random.random((xyz.shape[0])) <= dropout_ratio)[0]  # xyz.shape[0] 是点数，[0] 是取出满足条件的索引数组
 
             if len(drop_idx) > 0:
+                # 这样做不是直接删除点，而是把这些点“挤压”到第一个点的位置，防止点数变化，保证张量形状一致
                 xyz[drop_idx, :] = xyz[0, :]
                 labels[drop_idx, :] = labels[0, :]
                 sig[drop_idx, :] = sig[0, :]
@@ -174,6 +185,15 @@ class point_semkitti_mix(data.Dataset):
             c, s = np.cos(rotate_rad), np.sin(rotate_rad)
             j = np.matrix([[c, s], [-s, c]])
             xyz[:, :2] = np.dot(xyz[:, :2], j)
+            # 这种做法默认点云的 z 轴是竖直方向，xy 平面是水平面。
+            # 也就是说，只有在点云已经对齐到“z轴竖直、xy为地面”的情况下，这种旋转才是合理的。
+            # 
+            # 对于自动驾驶、室外激光点云等，通常采集时就已经保证了这个坐标系（z竖直，xy为地面）。
+            # 如果点云不是这种坐标系（比如z不是竖直），那这种旋转就不再是“水平旋转”，可能会导致数据异常。
+            # 总结：
+            # 
+            # 这段旋转代码就是二维平面（xy）上的随机旋转（yaw角变换），z不变。
+            # 需要点云本身就是“z轴竖直、xy为地面”的坐标系，否则这种增强不合理。
 
         # random data augmentation by flip x , y or x+y
         if self.flip_aug:
@@ -202,7 +222,7 @@ class point_semkitti_mix(data.Dataset):
         unproj_normal_data = compute_normals_range(feat)
 
         data_dict = {}
-        data_dict['point_feat'] = feat
+        data_dict['point_feat'] = feat  #  对点数据增广后的点云
         data_dict['point_label'] = labels
         data_dict['ref_xyz'] = ref_pc
         data_dict['ref_label'] = ref_labels

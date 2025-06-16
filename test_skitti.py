@@ -113,10 +113,12 @@ def main_worker(local_rank, nprocs, configs):
         my_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(my_model)
 
     if os.path.exists(model_config['model_load_path']):
-        print('pre-train')
+        print(' -------------------------------pre-train------------------------------- ')
         try:
+            print("pre_weight load ckt path: ",model_config['model_load_path'])
             my_model, pre_weight = load_checkpoint_model_mask(model_config['model_load_path'], my_model, pytorch_device)
         except:
+            print("load ckt path: ",model_config['model_load_path'])
             my_model = load_checkpoint_old(model_config['model_load_path'], my_model)
 
     my_model.to(pytorch_device)
@@ -139,8 +141,9 @@ def main_worker(local_rank, nprocs, configs):
     valid_labels = np.vectorize(mapfile['learning_map_inv'].__getitem__)
 
     SemKITTI = get_pc_model_class(dataset_config['pc_dataset_type'])
-
+    
     val_pt_dataset = SemKITTI(data_path, imageset=val_imageset, label_mapping=label_mapping, num_vote = configs.num_vote)
+    print("SemKITTI len: ",len(val_pt_dataset))
 
     val_dataset = get_dataset_class(dataset_config['dataset_type'])(
         val_pt_dataset,
@@ -227,7 +230,7 @@ def main_worker(local_rank, nprocs, configs):
         with torch.no_grad():
             for i_iter_val, (val_data_dict) in enumerate(val_dataset_loader):
                 torch.cuda.empty_cache()
-
+                print(f"rank {train_hypers.local_rank} iter {i_iter_val}")
                 # predict
                 raw_labels = val_data_dict['raw_labels'].to(pytorch_device)
                 vote_logits = torch.zeros(raw_labels.shape[0], model_config['num_classes']).to(pytorch_device)
