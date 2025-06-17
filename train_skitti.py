@@ -75,7 +75,7 @@ def main(configs):
 def main_worker(local_rank, nprocs, configs):
     print(f"Process local_rank: {local_rank}, GPU: {torch.cuda.current_device()}")
     torch.autograd.set_detect_anomaly(True)
-    writer = SummaryWriter(log_dir='output_skitti/log')
+    # writer = SummaryWriter(log_dir='output_skitti/log')
     
     dataset_config = configs['dataset_params']
     model_config = configs['model_params']
@@ -404,20 +404,8 @@ def main_worker(local_rank, nprocs, configs):
 
             global_iter += 1
             if train_hypers.local_rank == 0:
-                 #tensorboard记录
-                writer.add_scalar('Loss/train', np.mean(loss_list), global_iter)
-                writer.add_scalar('LR', optimizer.param_groups[0]['lr'], global_iter)
                 if global_iter % check_iter == 0:
-                    writer.add_scalar('mIoU/val', val_miou, global_iter)
-                    writer.add_scalar('Loss/val', np.mean(val_loss_list), global_iter)
-                    if len(loss_list) > 0:
-                        print('epoch %d iter %5d, loss: %.3f\n' %
-                              (epoch, i_iter, np.mean(loss_list)))
-                    else:
-                        print('loss error')
-
-            if global_iter % check_iter == 0:
-                loss_list = []
+                    loss_list = []
 
         # if sche_epoch_update:
         #     scheduler.step() # 按 epoch 更新
