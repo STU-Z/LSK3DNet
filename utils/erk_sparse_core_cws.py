@@ -45,7 +45,7 @@ class Masking(object):
         mask.add_module(model)
     """
     def __init__(self, optimizer, scaler, spatial_partition, prune_rate_decay, prune_rate=0.5, prune_mode='magnitude', 
-                growth_mode='random',  redistribution_mode='momentum', fp16=False, update_frequency=None, z_spatial_partition=None,
+                growth_mode='random',  redistribution_mode='momentum', fp16=False, update_frequency=None,sort_frequency=None, z_spatial_partition=None,
                 sparsity=None, sparse_init=None, device=None, distributed=False, stop_iter = 60000):
         growth_modes = ['random', 'momentum', 'momentum_neuron', 'gradient']
         if growth_mode not in growth_modes:
@@ -81,6 +81,7 @@ class Masking(object):
         self.name_to_32bit = {}
 
         self.update_frequency = update_frequency
+        self.sort_frequency = sort_frequency
         self.stop_iter = stop_iter
         self.sparsity = sparsity
         self.sparse_init = sparse_init
@@ -326,7 +327,94 @@ class Masking(object):
                 print('*********************************Dynamic Sparsity********************************')
                 self.truncate_weights()
                 self.print_nonzero_counts()
+                
+    def step_cws(self,module):
+        if self.half:
+            self.apply_mask()
+        else:  # 未使用混合精度
+            self.optimizer.step()
+            self.apply_mask()
 
+        # decay the adaptation rate for better results
+        self.prune_rate_decay.step()
+        self.prune_rate = self.prune_rate_decay.get_dr(self.prune_rate)
+        self.steps += 1
+        if self.steps < self.stop_iter:
+            if self.steps % self.update_frequency == 0:
+                print('*********************************Dynamic Sparsity********************************')
+                self.truncate_weights()
+                self.print_nonzero_counts()
+            if self.steps % self.update_frequency == 0:
+                self.sort_channels(module,zero_optimizer_state=True)
+
+            
+    def zero_optimizer_state(self, tensor):
+        for group in self.optimizer.param_groups:
+            for p in group['params']:
+                if p is tensor:
+                    state = self.optimizer.state[p]
+                    if 'momentum_buffer' in state:
+                        state['momentum_buffer'].zero_()
+                    if 'exp_avg' in state:
+                        state['exp_avg'].zero_()
+                    if 'exp_avg_sq' in state:
+                        state['exp_avg_sq'].zero_()
+                        
+    def sort_channels(self, module,zero_optimizer_state=False):
+        for module_name, submodule in module.named_modules():
+            if isinstance(submodule, (nn.Conv3d, spconv.SubMConv3d, spconv.SparseConv3d)):
+                name = module_name + '.weight' if module_name else 'weight'
+                # name, tensor = module.named_parameters()
+                if '.layers.' in name:
+                    tensor = submodule.weight
+                    # 1. 计算每个输出通道的 L1 范数
+                    l1_norm = tensor.abs().sum(dim=(1,2,3,4))  # [out_channels]
+                    # 2. 按 L1 范数降序排序，获得排序后的索引
+                    sorted_idx = torch.argsort(l1_norm, descending=True)
+                    # 3. 按排序结果重排 weight
+                    sorted_weight = tensor.data[sorted_idx].clone()
+                    # 4. 用排序后的参数覆盖原 weight
+                    with torch.no_grad():
+                        tensor.data.copy_(sorted_weight)
+                        if zero_optimizer_state:
+                            self.zero_optimizer_state(tensor)
+                            
+    def copy_module_params(self, module_pre, module):
+        for (name_pre, param_pre), (name, param) in zip(module_pre.named_parameters(), module.named_parameters()):
+            with torch.no_grad():
+                param.data.copy_(param_pre.data)
+    # def select_channels(self, module_pre, module, out_channels):
+    #     self.copy_module_params(module_pre, module)
+    #     for module_name, submodule in module_pre.named_modules():
+    #         if isinstance(submodule, (nn.Conv3d, spconv.SubMConv3d, spconv.SparseConv3d)):
+    #             name = module_name + '.weight' if module_name else 'weight'
+    #             if '.layers.' in name:
+    #                 tensor = submodule.weight
+    #                 # 只保留前 out_channels 个输出通道
+    #                 selected_weight = tensor.data[:out_channels].clone()
+    #                 # 加载到目标 module 的对应卷积层
+    #                 target_submodule = dict(module.named_modules())[module_name] if module_name else module
+    #                 with torch.no_grad():
+    #                     target_submodule.weight.data.copy_(selected_weight)
+    #                     target_submodule.weight.data[out_channels:] = 0  # 只保留前 out_channels 个通道，其余置零
+    #                     # 如果存在 bias，也将其多余部分置零
+    #                     if target_submodule.bias is not None:
+    #                         target_submodule.bias.data[out_channels:] = 0   
+    #                     # self.zero_optimizer_state(self, tensor)      
+    def select_channels(self, module, out_channels):
+        # self.copy_module_params(module_pre, module)
+        for module_name, submodule in module.named_modules():
+            if isinstance(submodule, (nn.Conv3d, spconv.SubMConv3d, spconv.SparseConv3d)):
+                name = module_name + '.weight' if module_name else 'weight'
+                if '.layers.' in name:
+                    tensor = submodule.weight
+                    with torch.no_grad():
+                        # 只保留前 out_channels 个输出通道，其余置零
+                        tensor.data[out_channels:] = 0
+                        # 如果有 bias，也处理
+                        if submodule.bias is not None:
+                            submodule.bias.data[out_channels:] = 0
+              
 
     def apply_mask(self):
 

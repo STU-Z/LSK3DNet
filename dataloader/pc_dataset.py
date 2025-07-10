@@ -6,6 +6,8 @@ import pickle
 from pathlib import Path
 from nuscenes.utils import splits
 
+from st_data_help import load_semkitti_bin_with_spatio_temporal
+
 REGISTERED_PC_DATASET_CLASSES = {}
 
 
@@ -24,14 +26,16 @@ def get_pc_model_class(name):
     return REGISTERED_PC_DATASET_CLASSES[name]
 
 
+
 @register_dataset
 class SemKITTI_sk(data.Dataset):
-    def __init__(self, data_path, imageset='train', label_mapping="waymo.yaml", num_vote=1):
+    def __init__(self, data_path, imageset='train', label_mapping="waymo.yaml", num_vote=1,st_length=5):
         with open(label_mapping, 'r') as stream:
             semkittiyaml = yaml.safe_load(stream)
         self.learning_map = semkittiyaml['learning_map']
         self.imageset = imageset
         self.num_vote = num_vote
+        self.st_length = st_length
         if imageset == 'train':
             split = semkittiyaml['split']['train']
         elif imageset == 'val':
@@ -50,39 +54,49 @@ class SemKITTI_sk(data.Dataset):
         'Denotes the total number of samples'
         return len(self.im_idx)
 
+    # def __getitem__(self, index):
+    #     # 说明，self.im_idx[index]形为：path/00/velodyne/000000.bin
+    #     # 其中，path是数据集的根目录，00是序列号，
+    #     # velodyne是点云数据所在的文件夹，000000.bin是点
+        
+    #     raw_data = np.fromfile(
+    #         self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+    #     xyz, feat = raw_data[:, :3], raw_data[:, 3:4]
+    #     origin_len = len(raw_data)
+
+    #     if self.imageset == 'test':
+    #         sem_data = np.expand_dims(np.zeros_like(
+    #             raw_data[:, 0], dtype=int), axis=1)
+    #         inst_data = np.expand_dims(np.zeros_like(
+    #             raw_data[:, 0], dtype=np.uint32), axis=1)
+    #     else:
+    #         annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
+    #                                      dtype=np.uint32).reshape((-1, 1))
+
+    #         sem_data = annotated_data & 0xFFFF  # delete high 16 digits binary
+    #         sem_data = np.vectorize(self.learning_map.__getitem__)(sem_data)
+    #         inst_data = annotated_data >> 16
+
+    #         # annotated_data 是从 .label 文件读出来的，每个点一个 32 位无符号整数。
+    #         # 这 32 位里，低 16 位是语义标签，高 16 位是实例标签。
+    #         # & 0xFFFF 作用是只保留低 16 位，即语义标签部分。
+
+    #     origin_len = len(xyz)
+
+    #     data_dict = {}
+    #     data_dict['xyz'] = xyz
+    #     data_dict['labels'] = sem_data.astype(np.uint8)
+    #     data_dict['instance_label'] = inst_data
+    #     data_dict['signal'] = feat
+    #     data_dict['origin_len'] = origin_len
+
+    #     return data_dict, self.im_idx[index]
+    
     def __getitem__(self, index):
-        raw_data = np.fromfile(
-            self.im_idx[index], dtype=np.float32).reshape((-1, 4))
-        xyz, feat = raw_data[:, :3], raw_data[:, 3:4]
-        origin_len = len(raw_data)
-
-        if self.imageset == 'test':
-            sem_data = np.expand_dims(np.zeros_like(
-                raw_data[:, 0], dtype=int), axis=1)
-            inst_data = np.expand_dims(np.zeros_like(
-                raw_data[:, 0], dtype=np.uint32), axis=1)
-        else:
-            annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
-                                         dtype=np.uint32).reshape((-1, 1))
-
-            sem_data = annotated_data & 0xFFFF  # delete high 16 digits binary
-            sem_data = np.vectorize(self.learning_map.__getitem__)(sem_data)
-            inst_data = annotated_data >> 16
-
-            # annotated_data 是从 .label 文件读出来的，每个点一个 32 位无符号整数。
-            # 这 32 位里，低 16 位是语义标签，高 16 位是实例标签。
-            # & 0xFFFF 作用是只保留低 16 位，即语义标签部分。
-
-        origin_len = len(xyz)
-
-        data_dict = {}
-        data_dict['xyz'] = xyz
-        data_dict['labels'] = sem_data.astype(np.uint8)
-        data_dict['instance_label'] = inst_data
-        data_dict['signal'] = feat
-        data_dict['origin_len'] = origin_len
-
+        data_dict=load_semkitti_bin_with_spatio_temporal(
+            self.im_idx[index], self.learning_map, imageset=self.imageset, length=self.st_length)
         return data_dict, self.im_idx[index]
+        
 
 
 @register_dataset
@@ -239,8 +253,7 @@ def get_SemKITTI_label_name(label_mapping):
         semkittiyaml = yaml.safe_load(stream)
     SemKITTI_label_name = dict()
     for i in sorted(list(semkittiyaml['learning_map'].keys()))[::-1]:
-        SemKITTI_label_name[semkittiyaml['learning_map']
-                            [i]] = semkittiyaml['labels'][i]
+        SemKITTI_label_name[semkittiyaml['learning_map'][i]] = semkittiyaml['labels'][i]
 
     return SemKITTI_label_name
 

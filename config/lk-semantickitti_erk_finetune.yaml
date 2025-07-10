@@ -16,7 +16,8 @@ model_params:
     - 4
     - 8
     - 16
-  hiden_size:  64
+  middle_channels: 128
+  hiden_size:  64 
   num_classes: 20
   large_kernel_size:
     - 9
@@ -55,30 +56,47 @@ dataset_params:
     - -50
     - -4
   seg_labelweights:
-    - 0
-    - 55437630
-    - 320797
-    - 541736
-    - 2578735
-    - 3274484
-    - 552662
-    - 184064
-    - 78858
-    - 240942562
-    - 17294618
-    - 170599734
-    - 6369672
-    - 230413074
-    - 101130274
-    - 476491114
-    - 9833174
-    - 129609852
-    - 4506626
-    - 1168181
+    - 0  #         0.031501833    unlabeled  0，1 outlier，52 other-structure，99 other-object      0.031501833 = 0.018889854628292943+0.0002937197336781505+0.002395131480328884+0.009923127583046915
+    - 55437630  #  0.040818519255974316  car  10    0.040818519255974316
+    - 320797  #    0.00016609538710764618   bicycle 11   0.00016609538710764618
+    - 541736  #    0.00039838616015114444   motorcycle  15    0.00039838616015114444
+    - 2578735  #   0.0020633612104619787     truck  18      0.0020633612104619787
+    - 3274484  #   0.001649698        other-vehicle  13 bus， 16 on-rails， 20 other-vehicle   2.7879693665067774e-05+0.0+0.0016218197275284021=0.001649698
+    - 552662  #    0.00017698551338515307   person 30   0.00017698551338515307
+    - 184064  #    1.1065903904919655e-08     bicyclist 31  1.1065903904919655e-08
+    - 78858  #     5.532951952459828e-09   motorcyclist 32 5.532951952459828e-09
+    - 240942562  # 0.19879647126983286    road  40road，60lane-marking   0.1987493871255525+4.7084144280367186e-05=0.19879647126983286
+    - 17294618  #  0.014717169549888214    parking 44 0.014717169549888214
+    - 170599734  # 0.14392298360372    sidewalk 48 0.14392298360372
+    - 6369672  #   0.0039048553037472045    other-ground 49 0.0039048553037472045
+    - 230413074  # 0.1326861944777486    building 50 0.1326861944777486
+    - 101130274  # 0.0723592229456223   fence  51 0.0723592229456223
+    - 476491114  # 0.26681502148037506    vegetation  70 0.26681502148037506
+    - 9833174  #   0.006035012012626033     trunk 71 0.006035012012626033
+    - 129609852  # 0.07814222006271769       terrain  72 0.07814222006271769
+    - 4506626  #   0.002855498193863172      pole   80   0.002855498193863172
+    - 1168181  #   0.0006155958086189918       traffic-sign  81 0.0006155958086189918
+  
+  st_data_params:
+    imageset: "train"
+    time_frame_length: 5
+    sp_poses_aug: False
+    sp_data_aug: False
+    rotate_aug: True
+    flip_aug: True
+    scale_aug: True
+    transform_aug: True
+    dropout_aug: True
+    mix_aug: True
+    position_noise: 0.1 # m
+    angle_noise: 0.5  # deg
+    max_dropout_ratio: 0.2
+    flip_prob: 0.8
 
   train_data_loader:
     data_path: "./dataset/SemanticKitti/sequences/"
     imageset: "train"
+    seed: 1588147245
     batch_size:  20
     num_workers: 20
     rotate_aug: True
@@ -86,8 +104,21 @@ dataset_params:
     scale_aug: True
     transform_aug: True
     dropout_aug: True
-    polarmix_aug: False
+    polarmix_aug: True
     mix_aug: True
+    bg_trans_aug: True
+    bg_scale_aug: True
+    bg_dropout_aug: True
+    rotate_prob: 0.5
+    flip_prob: 0.5
+    scale_prob: 0.5
+    trans_prob: 0.5
+    dropout_prob: 0.5
+    polarmix_prob: 0.5
+    bg_trans_prob: 0.3
+    bg_scale_prob: 0.3
+    bg_dropout_prob: 0.3
+    mix_prob: 0.30
     instance_aug: False
     d_point_num: 80000
     SphereCrop: True
@@ -97,6 +128,7 @@ dataset_params:
   val_data_loader:
     data_path: "./dataset/SemanticKitti/sequences/"
     num_workers: 8
+    seed: 1588147245
     imageset: "val"
     batch_size: 8
     rotate_aug: False
@@ -106,7 +138,24 @@ dataset_params:
     dropout_aug: False
     polarmix_aug: False
     mix_aug: False
+    bg_trans_aug: False
+    bg_scale_aug: False
+    bg_dropout_aug: False
+    rotate_prob: 0.5
+    flip_prob: 0.5
+    scale_prob: 0.5
+    trans_prob: 0.5
+    dropout_prob: 0.5
+    polarmix_prob: 0.5
+    bg_trans_prob: 0.3
+    bg_scale_prob: 0.3
+    bg_dropout_prob: 0.3
+    mix_prob: 0.30
+    instance_aug: False
     d_point_num: -1
+    SphereCrop: False
+    ShufflePoint: False
+
 
 
 ###################
@@ -114,9 +163,9 @@ dataset_params:
 train_params:
   seed: 1588147245
   max_num_epochs: 30
-  learning_rate: 0.02 #0.0002
+  learning_rate: 0.01 # 0.01~0.005
   optimizer: AdamW # [SGD, Adam, AdamW]
-  lr_scheduler: ReduceLROnPlateau  # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
+  lr_scheduler: OneCycleLR  # [OneCycleLR, StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
   momentum: 0.9
   weight_decay: 1.0e-4
   nesterov: True
@@ -126,6 +175,9 @@ train_params:
   eval_every_n_steps: 1195 #299 #683 #597 #1195
   distributed: True
   amp_enabled: False
+  use_focal: False
+  focal_gamma: 2.0
+  dice_weight: 1.0
 
 ###################
 ## Sparse params
@@ -137,5 +189,6 @@ sparse_params:
   prune_rate: 0.3
   sparsity: 0.3
   sparse_init: 'ERK'
-  update_frequency: 8000
-  stop_sparse_epoch: 0
+  update_frequency: 2000 #8000
+  sort_frequency: 12000
+  stop_sparse_epoch: 60000

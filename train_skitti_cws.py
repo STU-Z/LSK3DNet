@@ -21,7 +21,7 @@ import shutil
 
 from utils.load_util import load_yaml
 from utils.load_save_util import load_checkpoint_old, load_checkpoint_model_mask
-from utils.erk_sparse_core import Masking, CosineDecay
+from utils.erk_sparse_core_cws import Masking, CosineDecay
 
 
 import warnings
@@ -114,6 +114,9 @@ def main_worker(local_rank, nprocs, configs):
     unique_label_str = [SemKITTI_label_name[x] for x in unique_label + 1]
 
     my_model = get_model_class(model_config['model_architecture'])(configs)
+    
+    validation_model_for_cws=get_model_class(model_config['model_architecture'])(configs)
+    
 
     if train_hypers['distributed']:
         my_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(my_model)
@@ -161,7 +164,7 @@ def main_worker(local_rank, nprocs, configs):
                        spatial_partition=model_config['spatial_group_partition'],
                        prune_mode=sparse_config['prune'], prune_rate_decay=decay,
                        growth_mode=sparse_config['growth'], redistribution_mode=sparse_config['redistribution'],
-                       fp16=train_hypers['amp_enabled'], update_frequency=sparse_config['update_frequency'],
+                       fp16=train_hypers['amp_enabled'], update_frequency=sparse_config['update_frequency'],sort_frequency=sparse_config['sort_frequency'],
                        sparsity=sparse_config['sparsity'], sparse_init=sparse_config['sparse_init'],
                        device=train_hypers.local_rank, distributed=train_hypers['distributed'], stop_iter=sparse_config['stop_sparse_epoch'])
         try:
@@ -202,6 +205,10 @@ def main_worker(local_rank, nprocs, configs):
             if global_iter % check_iter == 0 and global_iter != 0:  # 判断是否到验证步
                 torch.cuda.empty_cache()
                 my_model.eval()  # 模型切换到 eval 模式
+                validation_model_for_cws.eval()  # 验证模型也切换到 eval 模式
+                mask.copy_module_params(my_model, validation_model_for_cws)  # 将稀疏掩码参数复制到验证模型
+                mask.sort_channels(validation_model_for_cws)  # 对验证模型进行通道排序
+                mask.select_channels(validation_model_for_cws)  # 选择通道
                 hist_list = []
                 val_loss_list = []
                 total_time = 0
@@ -221,7 +228,9 @@ def main_worker(local_rank, nprocs, configs):
 
                         torch.cuda.synchronize()
                         start = time.time()
-                        val_data_dict = my_model(val_data_dict)
+                        # val_data_dict = my_model(val_data_dict)
+                        val_data_dict = validation_model_for_cws(val_data_dict)
+                        
                         torch.cuda.synchronize()
                         end = time.time()
                         total_time += (end-start)
@@ -354,7 +363,7 @@ def main_worker(local_rank, nprocs, configs):
                     4.用 scaler.update() 更新缩放因子
                     '''
                     mask.scaler.step(mask.optimizer)
-                    mask.step()
+                    mask.step_cws()
                     mask.scaler.update()
                     scale = mask.scaler.get_scale()
                     skip_lr_sched = (scale != mask.scaler.get_scale())
@@ -366,7 +375,7 @@ def main_worker(local_rank, nprocs, configs):
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(
                         parameters=my_model.parameters(), max_norm=0.25)
-                    mask.step()
+                    mask.step_cws()
                     if not sche_epoch_update:
                         scheduler.step()
             else:

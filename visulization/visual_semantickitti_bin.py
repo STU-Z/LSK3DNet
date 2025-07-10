@@ -1,3 +1,11 @@
+'''
+Author: Zhangrunbang 254616730@qq.com
+Date: 2025-06-17 09:40:27
+LastEditors: Zhangrunbang 254616730@qq.com
+LastEditTime: 2025-06-17 09:40:28
+FilePath: /LSK3DNet/visulization/visual_semantickitti_bin.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 import numpy as np
 import open3d as o3d
 import sys
@@ -50,8 +58,8 @@ if __name__ == "__main__":
        print("用法: python visual_semantickitti_bin.py <000000> ")
        sys.exit(1)
     lidar_idx=int(sys.argv[1])
-    bin_path ="/media/zrb/Zrb-TB2/kitti/SemanticKITTI_Data/SemanticKitti/sequences/00/spatiotemporal_out/move/velodyne/"
-    label_path ="/media/zrb/Zrb-TB2/kitti/SemanticKITTI_Data/SemanticKitti/sequences/00/spatiotemporal_out/move/labels"
+    bin_path ="/media/zrb/Zrb-TB2/kitti/SemanticKITTI_Data/SemanticKitti/sequences/01/spatiotemporal_out/move/velodyne/"
+    label_path ="/media/zrb/Zrb-TB2/kitti/SemanticKITTI_Data/SemanticKitti/sequences/01/spatiotemporal_out/move/labels"
     yaml_path = "config/label_mapping/semantic-kitti-all.yaml"
     bin_path = os.path.join(bin_path, f"{lidar_idx:06d}.bin")
     label_path = os.path.join(label_path, f"{lidar_idx:06d}.label")

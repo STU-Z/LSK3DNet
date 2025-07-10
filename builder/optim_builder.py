@@ -10,7 +10,8 @@ def build(configs, model):
                                         weight_decay=configs['train_params']["weight_decay"])
     elif configs['train_params']['optimizer'] == 'AdamW':
         optimizer = torch.optim.AdamW(model.parameters(),
-                                        lr=configs['train_params']["learning_rate"])
+                                        lr=configs['train_params']["learning_rate"]
+                                        , weight_decay=configs['train_params']["weight_decay"])
     elif configs['train_params']['optimizer'] == 'SGD':
         optimizer = torch.optim.SGD(model.parameters(),
                                     lr=configs['train_params']["learning_rate"],
@@ -50,7 +51,7 @@ def build(configs, model):
                 cycle_momentum=True,
                 base_momentum=0.85,
                 max_momentum=0.95,
-                div_factor=10.0,
+                div_factor=10.0,  #10.0
                 final_div_factor=1000.0,
                 three_phase=False,
                 last_epoch=-1,

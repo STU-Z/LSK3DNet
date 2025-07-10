@@ -27,6 +27,7 @@ class SparseBasicBlock(spconv.SparseModule):
             spconv.SubMConv3d(in_channels, out_channels, kernel_size=large_kernel,indice_key=indice_key, bias=False),
             nn.BatchNorm1d(out_channels),
             nn.LeakyReLU(0.1),
+            # nn.Dropout(p=0.3),  # 新增Dropout，p值可调
             spconv.SubMConv3d(out_channels, out_channels, kernel_size=large_kernel, indice_key=indice_key, bias=False),
             nn.BatchNorm1d(out_channels),
         )

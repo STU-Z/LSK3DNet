@@ -1,8 +1,8 @@
 '''
 Author: Zhangrunbang 254616730@qq.com
-Date: 2025-05-23 19:52:16
+Date: 2025-06-26 17:30:47
 LastEditors: Zhangrunbang 254616730@qq.com
-LastEditTime: 2025-05-23 19:55:18
+LastEditTime: 2025-06-26 17:32:56
 FilePath: /LSK3DNet/dataloader/utils.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -51,6 +51,36 @@ def swap(pt1, pt2, start_angle, end_angle, label1, label2):
     # 总结：
     # PolarMix 等增强方法确实会带来点云截断和拼接，但这是有意为之，目的是提升模型鲁棒性和泛化能力。只要增强比例合适，通常不会对最终性能造成负面影响，反而能提升模型在复杂场景下的表现。
 
+# def rotate_copy(pts, labels, instance_classes, Omega):
+#     # extract instance points
+#     pts_inst, labels_inst = [], []
+#     for s_class in instance_classes:
+#         pt_idx = np.where((labels == s_class))
+#         pts_inst.append(pts[pt_idx])
+#         labels_inst.append(labels[pt_idx])
+#     pts_inst = np.concatenate(pts_inst, axis=0)
+#     labels_inst = np.concatenate(labels_inst, axis=0)
+
+#     if len(pts_inst) == 0:
+#         return None, None
+    
+#     # rotate-copy
+#     pts_copy = [pts_inst]
+#     labels_copy = [labels_inst]
+#     for omega_j in Omega:
+#         rot_mat = np.array([[np.cos(omega_j),
+#                              np.sin(omega_j), 0],
+#                             [-np.sin(omega_j),
+#                              np.cos(omega_j), 0], [0, 0, 1]])
+#         new_pt = np.zeros_like(pts_inst)
+#         new_pt[:, :3] = np.dot(pts_inst[:, :3], rot_mat)
+#         new_pt[:, 3] = pts_inst[:, 3]
+#         pts_copy.append(new_pt)
+#         labels_copy.append(labels_inst)
+#     pts_copy = np.concatenate(pts_copy, axis=0)
+#     labels_copy = np.concatenate(labels_copy, axis=0)
+#     return pts_copy, labels_copy
+
 def rotate_copy(pts, labels, instance_classes, Omega):
     # extract instance points
     pts_inst, labels_inst = [], []
@@ -58,12 +88,13 @@ def rotate_copy(pts, labels, instance_classes, Omega):
         pt_idx = np.where((labels == s_class))
         pts_inst.append(pts[pt_idx])
         labels_inst.append(labels[pt_idx])
+    if len(pts_inst) == 0 or sum([arr.shape[0] for arr in pts_inst]) == 0:
+        return None, None
     pts_inst = np.concatenate(pts_inst, axis=0)
     labels_inst = np.concatenate(labels_inst, axis=0)
-
-    if len(pts_inst) == 0:
+    if pts_inst.ndim != 2 or pts_inst.shape[0] == 0:
         return None, None
-    
+
     # rotate-copy
     pts_copy = [pts_inst]
     labels_copy = [labels_inst]
@@ -74,7 +105,8 @@ def rotate_copy(pts, labels, instance_classes, Omega):
                              np.cos(omega_j), 0], [0, 0, 1]])
         new_pt = np.zeros_like(pts_inst)
         new_pt[:, :3] = np.dot(pts_inst[:, :3], rot_mat)
-        new_pt[:, 3] = pts_inst[:, 3]
+        if pts_inst.shape[1] > 3:
+            new_pt[:, 3:] = pts_inst[:, 3:]
         pts_copy.append(new_pt)
         labels_copy.append(labels_inst)
     pts_copy = np.concatenate(pts_copy, axis=0)

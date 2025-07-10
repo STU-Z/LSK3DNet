@@ -13,11 +13,13 @@ def build(dataset_config, train_config):
 
     label_mapping = dataset_config["label_mapping"]
 
+    st_params=dataset_config['st_data_params']
+    
     SemKITTI = get_pc_model_class(dataset_config['pc_dataset_type'])
 
     if "nuScenes" not in dataset_config['pc_dataset_type']:
-        train_pt_dataset = SemKITTI(data_path, imageset=train_imageset, label_mapping=label_mapping)
-        val_pt_dataset = SemKITTI(data_path, imageset=val_imageset, label_mapping=label_mapping)
+        train_pt_dataset = SemKITTI(data_path, imageset=train_imageset, label_mapping=label_mapping,st_length=st_params['time_frame_length'])
+        val_pt_dataset = SemKITTI(data_path, imageset=val_imageset, label_mapping=label_mapping,st_length=st_params['time_frame_length'])
     elif "nuScenes" in dataset_config['pc_dataset_type']:
         train_pt_dataset = SemKITTI(dataset_config, data_path, imageset=train_imageset)
         val_pt_dataset = SemKITTI(dataset_config, data_path, imageset=val_imageset)

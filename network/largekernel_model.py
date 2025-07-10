@@ -56,6 +56,7 @@ class largekernelseg(nn.Module):
             - 9
         '''
         self.input_dims = config['model_params']['input_dims']
+        self.middle_channels = config['model_params']['middle_channels']
         self.hiden_size = config['model_params']['hiden_size']
         self.large_kernel = config['model_params']['large_kernel_size']
         self.num_classes = config['model_params']['num_classes']
@@ -79,6 +80,7 @@ class largekernelseg(nn.Module):
         # input processing
         self.voxel_3d_generator = voxel_3d_generator(
             in_channels=self.input_dims,
+            middle_channels=self.middle_channels,
             out_channels=self.hiden_size,
             coors_range_xyz=self.coors_range_xyz,
             spatial_shape=self.spatial_shape
@@ -98,11 +100,25 @@ class largekernelseg(nn.Module):
                 # spatial_shape=np.int32(self.spatial_shape // self.strides[i]).tolist())
             )
         # decoder layer
+        
         self.classifier = nn.Sequential(
             nn.Linear(self.hiden_size * self.num_scales, 128),
+            nn.BatchNorm1d(128),
             nn.ReLU(True),
             nn.Linear(128, self.num_classes),
-        ) # [M, hiden_size * num_scales] --> [M, 128] --> [M, 128]-- > [M, num_classes]
+        )
+        
+        # self.classifier = nn.Sequential(
+        #     nn.Linear(self.hiden_size * self.num_scales, 64),
+        #     nn.BatchNorm1d(64),
+        #     nn.ReLU(True),
+        #     nn.Dropout(p=0.3),
+        #     nn.Linear(64, 128),
+        #     nn.BatchNorm1d(128),
+        #     nn.ReLU(True),
+        #     nn.Dropout(p=0.3), 
+        #     nn.Linear(128, self.num_classes),
+        # ) # [M, hiden_size * num_scales] --> [M, 128] --> [M, 128]-- > [M, num_classes]
 
         # self.projection_layer = nn.Sequential(
         #         nn.Linear(self.hiden_size * self.num_scales, 256), # 232 

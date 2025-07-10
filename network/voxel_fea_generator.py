@@ -25,7 +25,7 @@ class voxelization(nn.Module):
 
     def forward(self, data_dict):
         pc = data_dict['points'][:, :3]
-
+        intensity = data_dict['points'][:, 3]
         for idx, scale in enumerate(self.scale_list):
             xidx = self.sparse_quantize(pc[:, 0], self.coors_range_xyz[0], np.ceil(self.spatial_shape[0] / scale))
             yidx = self.sparse_quantize(pc[:, 1], self.coors_range_xyz[1], np.ceil(self.spatial_shape[1] / scale))
@@ -33,6 +33,7 @@ class voxelization(nn.Module):
             bxyz_indx = torch.stack([data_dict['batch_idx'], xidx, yidx, zidx], dim=-1).long()
             unq, unq_inv, unq_cnt = torch.unique(bxyz_indx, return_inverse=True, return_counts=True, dim=0)
             '''
+            data_dict['batch_idx']用来区分不同点对应哪个batch
             1. unq
                 含义：bxyz_indx 中所有唯一的行（即所有不同的 [batch_idx, xidx, yidx, zidx] 组合）。
                 shape：[M, 4]，M为唯一体素格子的数量。
@@ -46,11 +47,18 @@ class voxelization(nn.Module):
                 shape：[M]，M为唯一体素格子的数量。
                 作用：统计每个体素格子里有多少个点。
             '''
+            # 聚合每个体素的intensity均值
+            # intensity_mean = torch_scatter.scatter_mean(intensity, unq_inv, dim=0)  # [M]
+            
             unq = torch.cat([unq[:, 0:1], unq[:, [3, 2, 1]]], dim=1)
+            
+            # unq_with_intensity = torch.cat([unq, intensity_mean.unsqueeze(1)], dim=1)  # shape [M, 5]
+            
             data_dict['scale_{}'.format(scale)] = {
                 'full_coors': bxyz_indx,
                 'coors_inv': unq_inv,
                 'coors': unq.type(torch.int32)
+                # 'coors_with_intensity': unq_with_intensity  # [M] 每个体素格子的坐标和intensity均值
             }
         return data_dict
 
@@ -93,25 +101,92 @@ class voxelization_fixvs(nn.Module):
     unq_cnt 每个唯一体素格子中包含的点的数量，shape 为 [M]。
     '''
 
+class BottleneckResidualMLP(nn.Module):
+    '''
+    推荐 middle_channels = 1.5~2 × out_channels，常用 2×out_channels。
+    具体可根据显存和下游任务复杂度微调。
+    '''
+    def __init__(self, in_channels, middle_channels, out_channels):
+        super().__init__()
+        self.linear1 = nn.Linear(in_channels, middle_channels)
+        self.bn1 = nn.BatchNorm1d(middle_channels)
+        self.relu1 = nn.ReLU()
+        self.linear2 = nn.Linear(middle_channels, out_channels)
+        self.bn2 = nn.BatchNorm1d(out_channels)
+        self.relu2 = nn.ReLU()
+        # shortcut分支，若in/out通道不一致则线性变换
+        self.shortcut = nn.Identity() if in_channels == out_channels else nn.Linear(in_channels, out_channels)
+
+    def forward(self, x):
+        identity = self.shortcut(x)
+        out = self.linear1(x)
+        out = self.bn1(out)
+        out = self.relu1(out)
+        out = self.linear2(out)
+        out = self.bn2(out)
+        out += identity
+        out = self.relu2(out)
+        return out
+
+class ResidualMLPBlock(nn.Module):
+    def __init__(self, channels):
+        super().__init__()
+        self.linear1 = nn.Linear(channels, channels)
+        self.bn1 = nn.BatchNorm1d(channels)
+        self.relu1 = nn.ReLU()
+        self.linear2 = nn.Linear(channels, channels)
+        self.bn2 = nn.BatchNorm1d(channels)
+        self.relu2 = nn.ReLU()
+
+    def forward(self, x):
+        identity = x
+        out = self.linear1(x)
+        out = self.bn1(out)
+        out = self.relu1(out)
+        out = self.linear2(out)
+        out = self.bn2(out)
+        out += identity  # 残差连接
+        out = self.relu2(out)
+        return out
 
 class voxel_3d_generator(nn.Module):
-    def __init__(self, in_channels, out_channels, coors_range_xyz, spatial_shape):
+    def __init__(self, in_channels, middle_channels,out_channels, coors_range_xyz, spatial_shape):
         super(voxel_3d_generator, self).__init__()
         self.spatial_shape = spatial_shape
         self.coors_range_xyz = coors_range_xyz
+        # self.PPmodel = nn.Sequential(
+        #     nn.BatchNorm1d(in_channels),
+
+        #     nn.Linear(in_channels, out_channels),
+        #     nn.BatchNorm1d(out_channels),
+        #     nn.ReLU(),
+        #     # nn.Dropout(p=0.3),  # 新增
+
+        #     nn.Linear(out_channels, out_channels),
+        #     nn.BatchNorm1d(out_channels),
+        #     nn.ReLU(),
+        #     # nn.Dropout(p=0.3),  # 新增
+
+
+        #     nn.Linear(out_channels, out_channels),
+        # )
+
+        # 残差网络
         self.PPmodel = nn.Sequential(
             nn.BatchNorm1d(in_channels),
-
             nn.Linear(in_channels, out_channels),
             nn.BatchNorm1d(out_channels),
             nn.ReLU(),
-
-            nn.Linear(out_channels, out_channels),
-            nn.BatchNorm1d(out_channels),
-            nn.ReLU(),
-
+            ResidualMLPBlock(out_channels),  # 残差块
             nn.Linear(out_channels, out_channels),
         )
+        
+        # # 瓶颈网络
+        # self.PPmodel = nn.Sequential(
+        #     nn.BatchNorm1d(in_channels),
+        #     BottleneckResidualMLP(in_channels, middle_channels, out_channels),
+        #     nn.Linear(out_channels, out_channels),
+        # )
 
     def prepare_input(self, point, grid_ind, inv_idx, normal=None):
         '''
@@ -140,7 +215,11 @@ class voxel_3d_generator(nn.Module):
         intervals = (crop_range / cur_grid_size).to(point.device)
         voxel_centers = grid_ind * intervals + coors_range_xyz[:, 0].to(point.device)
         center_to_point = point[:, :3] - voxel_centers
-        pc_feature = torch.cat((point, nor_pc, center_to_point, normal), dim=1)
+        pc_feature = torch.cat((point, nor_pc, center_to_point, normal), dim=1)  
+        
+        # intensity_mean = torch_scatter.scatter_mean(point[:, 3], inv_idx, dim=0)[inv_idx]  
+        # pc_feature = torch.cat((point, nor_pc, center_to_point, normal,intensity_mean), dim=1)  
+        
 
         return pc_feature  #  [N, X]
 
