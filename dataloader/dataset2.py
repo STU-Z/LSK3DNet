@@ -114,7 +114,8 @@ class point_semkitti_mix(data.Dataset):
         data, root = self.point_cloud_dataset[index]
         # todo prepare spatio_temporal_data
         data_spatio_temporal_data = self.prepare_spatio_temporal_data(data)  # 增加spatio_temporal_data
-        data_single = self.get_single_sample(data, root, index)
+        # data_single = self.get_single_sample(data, root, index)
+        data_single=self.get_single_sample_with_spatio_temporal(data, root, index,data_spatio_temporal_data)
         # data_single = self.get_single_sample_new(data, root, index)
         # if self.mixing_and_downsampling:
         if self.mixing_and_downsampling and np.random.rand() < self.mix_prob:  # 修改，增加混合概率
@@ -124,8 +125,8 @@ class point_semkitti_mix(data.Dataset):
                 index+random_integer) % len(self.point_cloud_dataset)
             extra_data, extra_root = self.point_cloud_dataset[random_index]
             extra_spatio_temporal_data = self.prepare_spatio_temporal_data(extra_data)  # 增加spatio_temporal_data
-            extra_single = self.get_single_sample(
-                extra_data, extra_root, random_index, cut_scene=True)
+            # extra_single = self.get_single_sample(extra_data, extra_root, random_index, cut_scene=True)
+            extra_single = self.get_single_sample_with_spatio_temporal(extra_data, extra_root, random_index, extra_spatio_temporal_data,cut_scene=True)
             # extra_single = self.get_single_sample_new(extra_data, extra_root, random_index, cut_scene=True)
             cutmix_data_dict = {}
             # for keys in data_single.keys():
@@ -226,10 +227,19 @@ class point_semkitti_mix(data.Dataset):
             xyz[:, 1] > self.min_volume_space[1], xyz[:, 1] < self.max_volume_space[1])
         mask_z = np.logical_and(
             xyz[:, 2] > self.min_volume_space[2], xyz[:, 2] < self.max_volume_space[2])
-        mask = np.logical_and(mask_x, np.logical_and(mask_y, mask_z))   
+        mask = np.logical_and(mask_x, np.logical_and(mask_y, mask_z)) 
+        
+        st_mask_x = np.logical_and(
+            xyz[:, 0] > self.min_volume_space[0], xyz[:, 0] < self.max_volume_space[0])
+        st_mask_y = np.logical_and(
+            xyz[:, 1] > self.min_volume_space[1], xyz[:, 1] < self.max_volume_space[1])
+        st_mask_z = np.logical_and(
+            xyz[:, 2] > self.min_volume_space[2], xyz[:, 2] < self.max_volume_space[2])
+        st_mask = np.logical_and(st_mask_x, np.logical_and(st_mask_y, st_mask_z))     
         
         if cut_scene:
             mask *= instance_label != 0  # 等价于 mask = mask & (instance_label != 0)，即只有同时满足“在空间范围内”且“实例标签不为0”的点，mask才为True
+            st_mask *= st_instance_label != 0  # 等价于 mask = mask & (instance_label != 0)，即只有同时满足“在空间范围内”且“实例标签不为0”的点，mask才为True
 
         xyz = xyz[mask]
         # ref_pc = ref_pc[mask]
@@ -239,9 +249,9 @@ class point_semkitti_mix(data.Dataset):
         sig = sig[mask]
         point_num = len(xyz)
         
-        st_xyz=st_xyz[mask]
-        st_sig=st_sig[mask]
-        st_instance_label=st_instance_label[mask]
+        st_xyz=st_xyz[st_mask]
+        st_sig=st_sig[st_mask]
+        st_instance_label=st_instance_label[st_mask]
         st_point_num=len(st_xyz)
         
         if self.dropout and self.point_cloud_dataset.imageset == 'train':
@@ -291,12 +301,14 @@ class point_semkitti_mix(data.Dataset):
                                         np.random.normal(0, self.trans_std[2], 1)]).T
             xyz[:, 0:3] += noise_translate
             st_xyz[:, 0:3] += noise_translate
+            
         if self.rotate_aug and np.random.rand() < self.rotate_prob and self.point_cloud_dataset.imageset == 'train':
             rotate_rad = np.deg2rad(np.random.random() * 360)
             c, s = np.cos(rotate_rad), np.sin(rotate_rad)
             j = np.matrix([[c, s], [-s, c]])
             xyz[:, :2] = np.dot(xyz[:, :2], j)
             st_xyz[:, :2] = np.dot(st_xyz[:, :2], j)
+            
         feat = np.concatenate((xyz, sig), axis=1)
         unproj_normal_data = compute_normals_range(feat)
             
@@ -369,8 +381,8 @@ class point_semkitti_mix(data.Dataset):
             xyz[:, 2] > self.min_volume_space[2], xyz[:, 2] < self.max_volume_space[2])
         mask = np.logical_and(mask_x, np.logical_and(mask_y, mask_z))
 
-        # if cut_scene:
-        #     mask *= instance_label != 0  # 等价于 mask = mask & (instance_label != 0)，即只有同时满足“在空间范围内”且“实例标签不为0”的点，mask才为True
+        if cut_scene:
+            mask *= instance_label != 0  # 等价于 mask = mask & (instance_label != 0)，即只有同时满足“在空间范围内”且“实例标签不为0”的点，mask才为True
 
         xyz = xyz[mask]
         # ref_pc = ref_pc[mask]

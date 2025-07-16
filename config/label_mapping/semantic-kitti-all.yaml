@@ -133,14 +133,14 @@ learning_map:
   80: 18    # "pole"
   81: 19    # "traffic-sign"
   99: 0     # "other-object" to "unlabeled" ----------------------------mapped
-  252: 20    # "moving-car"
-  253: 21    # "moving-bicyclist"
-  254: 22    # "moving-person"
-  255: 23    # "moving-motorcyclist"
+  252: 20    # "moving-car"=20   or  "car"=1
+  253: 21    # "moving-bicyclist"=21  or "bicycle"=2
+  254: 22    # "moving-person"=22   or "person"=6
+  255: 23    # "moving-motorcyclist"=23   or "motorcyclist"=8
   256: 5    # "moving-on-rails" mapped to "moving-other-vehicle" ------mapped
   257: 5    # "moving-bus" mapped to "moving-other-vehicle" -----------mapped
-  258: 25    # "moving-truck"
-  259: 24    # "moving-other-vehicle"
+  258: 25    # "moving-truck"=25  or "truck"=4
+  259: 24    # "moving-other-vehicle"=24    or "other-vehicle"=5
 learning_map_inv: # inverse of previous map
   0: 0      # "unlabeled", and others ignored
   1: 10     # "car"

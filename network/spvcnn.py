@@ -60,6 +60,23 @@ class SparseBasicBlock(spconv.SparseModule):
         output = self.layers(x) # [M, in_channels] --> [M, out_channels]
         return output.replace_feature(F.leaky_relu(output.features + identity.features, 0.1)) #  [M, out_channels]
 
+class ResidualMLP(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(ResidualMLP, self).__init__()
+        self.main = nn.Sequential(
+            nn.Linear(in_channels, out_channels // 2),
+            nn.LeakyReLU(0.1, True),
+            nn.BatchNorm1d(out_channels // 2),
+            nn.Linear(out_channels // 2, out_channels // 2),
+            nn.LeakyReLU(0.1, True),
+            nn.BatchNorm1d(out_channels // 2),
+            nn.Linear(out_channels // 2, out_channels),
+            nn.LeakyReLU(0.1, True),
+        )
+        self.shortcut = nn.Linear(in_channels, out_channels)
+
+    def forward(self, x):
+        return self.main(x) + self.shortcut(x)
 
 class point_encoder(nn.Module):
     def __init__(self, in_channels, out_channels, scale):
@@ -80,6 +97,7 @@ class point_encoder(nn.Module):
             nn.Linear(out_channels // 2, out_channels),
             nn.LeakyReLU(0.1, True),
         )
+        
         self.layer_out = nn.Sequential(
             nn.Linear(2 * out_channels, out_channels),
             nn.LeakyReLU(0.1, True),
@@ -156,6 +174,54 @@ class point_encoder(nn.Module):
         data_dict['full_coors'] = data_dict['scale_{}'.format(self.scale)]['full_coors']
         
         return v_feat #[M, outchannels]
+
+
+class point_encoder_modified(nn.Module):
+    def __init__(self, in_channels, out_channels, scale, batch_size, attn_heads=4):
+        super(point_encoder_modified, self).__init__()
+        self.scale = scale
+        self.layer_in = nn.Sequential(
+            nn.Linear(in_channels, out_channels),
+            nn.LeakyReLU(0.1, True),
+        )
+        self.batch_size = batch_size
+        self.PPmodel = ResidualMLP(in_channels, out_channels)
+        # 用多头注意力机制替代 layer_out
+        self.attn = nn.MultiheadAttention(embed_dim=2*out_channels, num_heads=attn_heads, batch_first=True)
+        self.out_proj = nn.Linear(2*out_channels, out_channels)
+
+    @staticmethod
+    def downsample(coors, p_fea, scale=2):
+        batch = coors[:, 0:1]
+        coors = coors[:, 1:] // scale
+        inv = torch.unique(torch.cat([batch, coors], dim=1), return_inverse=True, dim=0)[1]
+        return torch_scatter.scatter_mean(p_fea, inv, dim=0), inv
+
+    def forward(self, features, data_dict):
+        output, inv = self.downsample(data_dict['coors'], features)
+        identity = self.layer_in(features)
+        output = self.PPmodel(output)[inv]
+        output = torch.cat([identity, output], dim=1)  # [M, 2*out_channels]
+
+        attn_outputs = []
+        for b in range(self.batch_size):
+            mask = (data_dict['batch_idx'] == b)
+            attn_input_b = output[data_dict['coors_inv']][mask].unsqueeze(0)  # [1, N_b, 2*out_channels]
+            attn_out_b, _ = self.attn(attn_input_b, attn_input_b, attn_input_b)
+            attn_outputs.append(attn_out_b.squeeze(0))  # [N_b, out_channels]
+        attn_out = torch.cat(attn_outputs, dim=0)  # [N, out_channels]
+        attn_out = self.out_proj(attn_out.squeeze(0))  # [N, out_channels]
+
+        v_feat = torch_scatter.scatter_mean(
+            attn_out,
+            data_dict['scale_{}'.format(self.scale)]['coors_inv'],
+            dim=0
+        )
+        data_dict['coors'] = data_dict['scale_{}'.format(self.scale)]['coors']
+        data_dict['coors_inv'] = data_dict['scale_{}'.format(self.scale)]['coors_inv']
+        data_dict['full_coors'] = data_dict['scale_{}'.format(self.scale)]['full_coors']
+        return v_feat
+
 
 class point_encoder_fixvs(nn.Module):
     def __init__(self, in_channels, out_channels, scale):

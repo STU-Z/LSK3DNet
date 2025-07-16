@@ -2,7 +2,7 @@
 Author: Zhangrunbang 254616730@qq.com
 Date: 2025-06-29 21:27:09
 LastEditors: Zhangrunbang 254616730@qq.com
-LastEditTime: 2025-06-29 21:27:10
+LastEditTime: 2025-07-14 21:48:20
 FilePath: /LSK3DNet/dataloader/label_stastic.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -15,7 +15,8 @@ from collections import defaultdict
 seq = '08'
 root = '/media/zrb/Zrb-TB2/kitti/SemanticKITTI_Data/SemanticKitti/sequences'
 label_dir = os.path.join(root, seq, 'labels')
-label_mapping_path = 'config/label_mapping/semantic-kitti-all.yaml'
+# label_mapping_path = 'config/label_mapping/semantic-kitti-all.yaml'
+label_mapping_path = 'config/label_mapping/semantic-kitti-sub.yaml'
 
 # 读取label映射
 with open(label_mapping_path, 'r') as f:
