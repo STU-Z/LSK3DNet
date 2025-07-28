@@ -1,0 +1,40 @@
+train_skitti.py
+{'format_version': 1, 'model_params': {'model_architecture': 'largekernelseg', 'input_dims': 13, 'spatial_shape': [2000, 2000, 120], 'scale_list': [2, 4, 8, 16], 'hiden_size': 64, 'num_classes': 20, 'large_kernel_size': [9, 9, 9], 'spatial_group_partition': [0, 3, 6, 9], 'model_load_path': 'output_skitti/opensource_9ks_s030_w64_0.pt', 'model_save_path': 'output_skitti/opensource_9ks_s030_w64_.pt'}, 'dataset_params': {'training_size': 19130, 'dataset_type': 'point_semkitti_mix', 'pc_dataset_type': 'SemKITTI_sk', 'collate_type': 'mix_collate_fn_default', 'ignore_label': 0, 'label_mapping': './config/label_mapping/semantic-kitti-sub.yaml', 'num_classes': 20, 'spatial_shape': [2000, 2000, 120], 'max_volume_space': [50, 50, 2], 'min_volume_space': [-50, -50, -4], 'seg_labelweights': [0, 55437630, 320797, 541736, 2578735, 3274484, 552662, 184064, 78858, 240942562, 17294618, 170599734, 6369672, 230413074, 101130274, 476491114, 9833174, 129609852, 4506626, 1168181], 'train_data_loader': {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'imageset': 'train', 'batch_size': 20, 'num_workers': 20, 'rotate_aug': True, 'flip_aug': True, 'scale_aug': True, 'transform_aug': True, 'dropout_aug': True, 'polarmix_aug': False, 'mix_aug': True, 'instance_aug': False, 'd_point_num': 80000, 'SphereCrop': True, 'ShufflePoint': False}, 'val_data_loader': {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'num_workers': 8, 'imageset': 'val', 'batch_size': 8, 'rotate_aug': False, 'flip_aug': False, 'scale_aug': False, 'transform_aug': False, 'dropout_aug': False, 'polarmix_aug': False, 'mix_aug': False, 'instance_aug': False, 'd_point_num': -1, 'SphereCrop': False, 'ShufflePoint': False}}, 'train_params': {'seed': 1588147245, 'max_num_epochs': 30, 'learning_rate': 0.0002, 'optimizer': 'SGD', 'lr_scheduler': 'StepLR', 'momentum': 0.9, 'weight_decay': 0.0001, 'nesterov': True, 'lambda_lovasz': 1, 'decay_step': 1, 'decay_rate': 0.5, 'eval_every_n_steps': 299, 'distributed': False, 'amp_enabled': False}, 'sparse_params': {'use_sparse': True, 'growth': 'random', 'prune': 'magnitude', 'redistribution': 'none', 'prune_rate': 0.3, 'sparsity': 0.3, 'sparse_init': 'ERK', 'update_frequency': 8000, 'stop_sparse_epoch': 0}, 'config_path': './config/lk-semantickitti_erk_finetune.yaml', 'ip': '127.0.0.1', 'port': '3020'}
+pre-train
+not matched key spv_enc.0.v_enc.0.layers.0.weight
+not matched key spv_enc.0.v_enc.0.layers.3.weight
+not matched key spv_enc.0.v_enc.1.layers.0.weight
+not matched key spv_enc.0.v_enc.1.layers.3.weight
+not matched key spv_enc.1.v_enc.0.layers.0.weight
+not matched key spv_enc.1.v_enc.0.layers.3.weight
+not matched key spv_enc.1.v_enc.1.layers.0.weight
+not matched key spv_enc.1.v_enc.1.layers.3.weight
+not matched key spv_enc.2.v_enc.0.layers.0.weight
+not matched key spv_enc.2.v_enc.0.layers.3.weight
+not matched key spv_enc.2.v_enc.1.layers.0.weight
+not matched key spv_enc.2.v_enc.1.layers.3.weight
+not matched key spv_enc.3.v_enc.0.layers.0.weight
+not matched key spv_enc.3.v_enc.0.layers.3.weight
+not matched key spv_enc.3.v_enc.1.layers.0.weight
+not matched key spv_enc.3.v_enc.1.layers.3.weight
+matched parameter sets: 241, and no matched: 16
+ --------------------------------------- data_builder --------------------------------------- 
+imageset:  train
+split:  [0, 1, 2, 3, 4, 5, 6, 7, 9, 10]
+num_vote:  1
+imageset:  val
+split:  [8]
+num_vote:  1
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  True
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'imageset': 'train', 'batch_size': 20, 'num_workers': 20, 'rotate_aug': True, 'flip_aug': True, 'scale_aug': True, 'transform_aug': True, 'dropout_aug': True, 'polarmix_aug': False, 'mix_aug': True, 'instance_aug': False, 'd_point_num': 80000, 'SphereCrop': True, 'ShufflePoint': False}
+loader_config['SphereCrop']:  True
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  False
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'num_workers': 8, 'imageset': 'val', 'batch_size': 8, 'rotate_aug': False, 'flip_aug': False, 'scale_aug': False, 'transform_aug': False, 'dropout_aug': False, 'polarmix_aug': False, 'mix_aug': False, 'instance_aug': False, 'd_point_num': -1, 'SphereCrop': False, 'ShufflePoint': False}
+loader_config['SphereCrop']:  False
+957

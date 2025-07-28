@@ -107,6 +107,40 @@ def load_checkpoint_model_mask(model_load_path, model, device):
     # model.load_state_dict(my_model_dict, strict=False)  # 也可以用strict=False方式
     return model, pre_weight['mask']  # 返回模型和mask（稀疏训练用）
 
+def load_checkpoint_model_mask_optimizer_scheduler_scaler_epoch(model_load_path, model,train_hypers, device):
+    my_model_dict = model.state_dict()  # 当前模型的参数字典
+    pre_weight = torch.load(model_load_path,map_location=device)  # 加载预训练权重
+    model_weight = pre_weight['checkpoint']  # 取出参数部分
+    part_load = {}  # 用于存放可以加载的参数
+    match_size = 0  # 匹配的参数数量
+    nomatch_size = 0  # 不匹配的参数数量
+    for k in model_weight.keys():
+        value = model_weight[k]
+        if k in my_model_dict and my_model_dict[k].shape == value.shape:
+            # 如果参数名和shape都匹配，就加载
+            match_size += 1
+            part_load[k] = value
+        else:
+            # 否则打印出来，不加载
+            print("not matched key", k)
+            nomatch_size += 1
+
+    print("matched parameter sets: {}, and no matched: {}".format(match_size, nomatch_size))
+
+    my_model_dict.update(part_load)  # 用匹配的参数更新当前模型参数
+    model.load_state_dict(my_model_dict)  # 加载到模型
+    # model.load_state_dict(my_model_dict, strict=False)  # 也可以用strict=False方式
+    # checkpoint = torch.load(PATH)
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer_state = pre_weight['optimizer_state_dict']
+    scheduler_state=pre_weight['scheduler_state_dict']
+    epoch = pre_weight['epoch']
+    scaler_state=None
+    if train_hypers['amp_enabled'] and 'scale_state_dict' in pre_weight and pre_weight['scale_state_dict'] is not None:
+        scaler_state= pre_weight['scaler_state_dict']
+    return model, pre_weight['mask'], optimizer_state, scheduler_state, scaler_state, epoch # 返回模型和mask（稀疏训练用）
+    
+
 def load_checkpoint_1b1(model_load_path, model):
     my_model_dict = model.state_dict()
     pre_weight = torch.load(model_load_path)

@@ -122,6 +122,9 @@ Use the following command to install libraries:
 
 Use the corresponding test scripts to evaluate the trained models:
 
+```bash
+  export PYTHONPATH=$PYTHONPATH:/home/ubuntu/data/deeplearning_project/LSK3DNet/c_utils/build
+```
   ```bash
   CUDA_VISIBLE_DEVICES=0,1 python test_XXXX.py | tee output/opensource_test.txt
   ```

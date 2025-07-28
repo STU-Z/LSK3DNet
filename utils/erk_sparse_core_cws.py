@@ -45,8 +45,8 @@ class Masking(object):
         mask.add_module(model)
     """
     def __init__(self, optimizer, scaler, spatial_partition, prune_rate_decay, prune_rate=0.5, prune_mode='magnitude', 
-                growth_mode='random',  redistribution_mode='momentum', fp16=False, update_frequency=None,sort_frequency=None, z_spatial_partition=None,
-                sparsity=None, sparse_init=None, device=None, distributed=False, stop_iter = 60000):
+                growth_mode='random',  redistribution_mode='momentum', fp16=False, update_frequency=2000,sort_frequency=12000, z_spatial_partition=None,
+                sparsity=None, sparse_init=None, device=None, distributed=False, stop_iter = 60000,out_channels=64):
         growth_modes = ['random', 'momentum', 'momentum_neuron', 'gradient']
         if growth_mode not in growth_modes:
             print('Growth mode: {0} not supported!'.format(growth_mode))
@@ -87,6 +87,7 @@ class Masking(object):
         self.sparse_init = sparse_init
 
         self.distributed = distributed
+        self.out_channels=out_channels
 
         # self.kernel_size = 9 # [0,3,0,3,0,3] k1 k2 k3
         '''
@@ -341,11 +342,13 @@ class Masking(object):
         self.steps += 1
         if self.steps < self.stop_iter:
             if self.steps % self.update_frequency == 0:
-                print('*********************************Dynamic Sparsity********************************')
+                print('*********************************Dynamic Sparsity CWS********************************')
                 self.truncate_weights()
                 self.print_nonzero_counts()
-            if self.steps % self.update_frequency == 0:
+            if self.steps % self.sort_frequency == 0:
+                print('*********************************Sort and Select Channels CWS********************************')
                 self.sort_channels(module,zero_optimizer_state=True)
+                self.select_channels(module, out_channels=self.out_channels)
 
             
     def zero_optimizer_state(self, tensor):
@@ -383,23 +386,6 @@ class Masking(object):
         for (name_pre, param_pre), (name, param) in zip(module_pre.named_parameters(), module.named_parameters()):
             with torch.no_grad():
                 param.data.copy_(param_pre.data)
-    # def select_channels(self, module_pre, module, out_channels):
-    #     self.copy_module_params(module_pre, module)
-    #     for module_name, submodule in module_pre.named_modules():
-    #         if isinstance(submodule, (nn.Conv3d, spconv.SubMConv3d, spconv.SparseConv3d)):
-    #             name = module_name + '.weight' if module_name else 'weight'
-    #             if '.layers.' in name:
-    #                 tensor = submodule.weight
-    #                 # 只保留前 out_channels 个输出通道
-    #                 selected_weight = tensor.data[:out_channels].clone()
-    #                 # 加载到目标 module 的对应卷积层
-    #                 target_submodule = dict(module.named_modules())[module_name] if module_name else module
-    #                 with torch.no_grad():
-    #                     target_submodule.weight.data.copy_(selected_weight)
-    #                     target_submodule.weight.data[out_channels:] = 0  # 只保留前 out_channels 个通道，其余置零
-    #                     # 如果存在 bias，也将其多余部分置零
-    #                     if target_submodule.bias is not None:
-    #                         target_submodule.bias.data[out_channels:] = 0   
     #                     # self.zero_optimizer_state(self, tensor)      
     def select_channels(self, module, out_channels):
         # self.copy_module_params(module_pre, module)
@@ -523,9 +509,8 @@ class Masking(object):
                     num_nonzeros = (mask != 0).sum().item() # .item() 把结果从张量转换为Python的标量（int）
                     val = '{0}: {1}->{2}, density: {3:.3f}'.format(name, self.name2nonzeros[name], num_nonzeros,
                                                                 num_nonzeros / float(mask.numel()))
-                    print(val)
-
-        print('Prune rate: {0}\n'.format(self.prune_rate))
+                    # print(val)
+        # print('Prune rate: {0}\n'.format(self.prune_rate))
 
     # def fired_masks_update(self):
     #     ntotal_fired_weights = 0.0

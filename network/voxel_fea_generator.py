@@ -33,7 +33,6 @@ class voxelization(nn.Module):
             bxyz_indx = torch.stack([data_dict['batch_idx'], xidx, yidx, zidx], dim=-1).long()
             unq, unq_inv, unq_cnt = torch.unique(bxyz_indx, return_inverse=True, return_counts=True, dim=0)
             '''
-            data_dict['batch_idx']用来区分不同点对应哪个batch
             1. unq
                 含义：bxyz_indx 中所有唯一的行（即所有不同的 [batch_idx, xidx, yidx, zidx] 组合）。
                 shape：[M, 4]，M为唯一体素格子的数量。
@@ -181,7 +180,7 @@ class voxel_3d_generator(nn.Module):
             nn.Linear(out_channels, out_channels),
         )
         
-        # # 瓶颈网络
+        # # # 瓶颈网络
         # self.PPmodel = nn.Sequential(
         #     nn.BatchNorm1d(in_channels),
         #     BottleneckResidualMLP(in_channels, middle_channels, out_channels),

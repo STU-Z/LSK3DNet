@@ -32,6 +32,8 @@ for the pybind library, e.g.:
 
 ```
 cmake .. -Dpybind11_DIR=/usr/local/lib/python3.6/dist-packages/pybind11/share/cmake/pybind11
+
+cmake .. -Dpybind11_DIR=/usr/local/lib/python3.8/dist-packages/pybind11/share/cmake/pybind11
 ```
 Or, one could add pybind11 as a subdirectory inside the c++ project and directly compile it. 
 For more details we refer to the pybind11 compiling [doc](https://pybind11.readthedocs.io/en/stable/compiling.html).
@@ -44,4 +46,7 @@ export PYTHONPATH=$PYTHONPATH:<path-to-library>
 ```
 ```
 export PYTHONPATH=$PYTHONPATH:/media/zrb/Elements/Git_code/LSK3DNet/c_utils/build
+export PYTHONPATH=$PYTHONPATH:/home/ubuntu/data/deeplearning_project/LSK3DNet/c_utils/build
+
+export PYTHONPATH=$PYTHONPATH:/home/ubuntu/data/zrb/code/LSK3DNet/c_utils/build
 ```

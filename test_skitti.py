@@ -80,7 +80,8 @@ def reduce_tensor(tensor, world_size):
 
 def main_worker(local_rank, nprocs, configs):
     torch.autograd.set_detect_anomaly(True)
-
+    print('local_rank ', local_rank)
+    print('nprocs ',nprocs)
     dataset_config = configs['dataset_params']
     model_config = configs['model_params']
     train_hypers = configs['train_params']
@@ -89,6 +90,7 @@ def main_worker(local_rank, nprocs, configs):
     configs.train_params.world_size = nprocs
     
     if train_hypers['distributed']:
+        print("train_hypers['distributed']: ",train_hypers['distributed'])
         init_method = 'tcp://' + args.ip + ':' + args.port
         dist.init_process_group(backend='nccl', init_method=init_method, world_size=nprocs, rank=local_rank)
         dataset_config.val_data_loader.batch_size = dataset_config.val_data_loader.batch_size // nprocs
@@ -131,9 +133,12 @@ def main_worker(local_rank, nprocs, configs):
     # prepare dataset
     val_dataloader_config = dataset_config['val_data_loader']
     data_path = val_dataloader_config["data_path"]
+    print('val data path: ',data_path)
     val_imageset = val_dataloader_config["imageset"]
+    print('val_imageset: ',val_imageset)
 
     label_mapping = dataset_config["label_mapping"]
+    print("label_mapping: ",label_mapping)
 
     with open(dataset_config['label_mapping'], 'r') as stream:
         mapfile = yaml.safe_load(stream)
@@ -141,7 +146,7 @@ def main_worker(local_rank, nprocs, configs):
     valid_labels = np.vectorize(mapfile['learning_map_inv'].__getitem__)
 
     SemKITTI = get_pc_model_class(dataset_config['pc_dataset_type'])
-    
+
     val_pt_dataset = SemKITTI(data_path, imageset=val_imageset, label_mapping=label_mapping, num_vote = configs.num_vote)
     print("SemKITTI len: ",len(val_pt_dataset))
 
@@ -160,6 +165,7 @@ def main_worker(local_rank, nprocs, configs):
                                                     drop_last=False,
                                                     shuffle = False,
                                                     sampler=val_sampler)
+    print('val_dataset_loader len: ',len(val_dataset_loader))
 
 
     if val_imageset == 'val':
@@ -230,7 +236,7 @@ def main_worker(local_rank, nprocs, configs):
         with torch.no_grad():
             for i_iter_val, (val_data_dict) in enumerate(val_dataset_loader):
                 torch.cuda.empty_cache()
-                print(f"rank {train_hypers.local_rank} iter {i_iter_val}")
+
                 # predict
                 raw_labels = val_data_dict['raw_labels'].to(pytorch_device)
                 vote_logits = torch.zeros(raw_labels.shape[0], model_config['num_classes']).to(pytorch_device)
@@ -268,10 +274,10 @@ def main_worker(local_rank, nprocs, configs):
                     test_pred_label.tofile(new_save_dir)
                     pbar.update(1)
 
-        if train_hypers.local_rank == 0:
-            pbar.close()
-            # print('Predicted test labels are saved in %s. Need to be shifted to original label format before submitting to the Competition website.' % exp_dir)
-            # print('Remapping script can be found in semantic-kitti-api.')
+    #     if train_hypers.local_rank == 0:
+    #         pbar.close()
+    #         # print('Predicted test labels are saved in %s. Need to be shifted to original label format before submitting to the Competition website.' % exp_dir)
+    #         # print('Remapping script can be found in semantic-kitti-api.')
 
 if __name__ == '__main__':
     print(' '.join(sys.argv))

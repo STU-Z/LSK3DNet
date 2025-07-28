@@ -1,0 +1,1650 @@
+train_skitti.py
+{'format_version': 1, 'model_params': {'model_architecture': 'largekernelseg', 'input_dims': 13, 'spatial_shape': [2000, 2000, 120], 'scale_list': [2, 4, 8, 16], 'hiden_size': 64, 'num_classes': 20, 'large_kernel_size': [9, 9, 9], 'spatial_group_partition': [0, 3, 6, 9], 'model_load_path': 'output_skitti/half.pt', 'model_save_path': 'output_skitti/opensource_9ks_s030_w64_.pt'}, 'dataset_params': {'training_size': 19130, 'dataset_type': 'point_semkitti_mix', 'pc_dataset_type': 'SemKITTI_sk', 'collate_type': 'mix_collate_fn_default', 'ignore_label': 0, 'label_mapping': './config/label_mapping/semantic-kitti-sub.yaml', 'num_classes': 20, 'spatial_shape': [2000, 2000, 120], 'max_volume_space': [50, 50, 2], 'min_volume_space': [-50, -50, -4], 'seg_labelweights': [0, 55437630, 320797, 541736, 2578735, 3274484, 552662, 184064, 78858, 240942562, 17294618, 170599734, 6369672, 230413074, 101130274, 476491114, 9833174, 129609852, 4506626, 1168181], 'train_data_loader': {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'imageset': 'train', 'batch_size': 16, 'num_workers': 3, 'rotate_aug': True, 'flip_aug': True, 'scale_aug': True, 'transform_aug': True, 'dropout_aug': True, 'polarmix_aug': False, 'mix_aug': True, 'instance_aug': False, 'd_point_num': 80000, 'SphereCrop': True, 'ShufflePoint': False}, 'val_data_loader': {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'num_workers': 2, 'imageset': 'val', 'batch_size': 4, 'rotate_aug': False, 'flip_aug': False, 'scale_aug': False, 'transform_aug': False, 'dropout_aug': False, 'polarmix_aug': False, 'mix_aug': False, 'instance_aug': False, 'd_point_num': -1, 'SphereCrop': False, 'ShufflePoint': False}}, 'train_params': {'seed': 1588147245, 'max_num_epochs': 50, 'learning_rate': 0.1, 'optimizer': 'AdamW', 'lr_scheduler': 'OneCycleLR', 'momentum': 0.9, 'weight_decay': 0.0001, 'nesterov': True, 'lambda_lovasz': 1, 'decay_step': 1, 'decay_rate': 0.8, 'eval_every_n_steps': 299, 'distributed': True, 'amp_enabled': False}, 'sparse_params': {'use_sparse': True, 'growth': 'random', 'prune': 'magnitude', 'redistribution': 'none', 'prune_rate': 0.3, 'sparsity': 0.3, 'sparse_init': 'ERK', 'update_frequency': 8000, 'stop_sparse_epoch': 0}, 'config_path': './config/lk-semantickitti_erk_finetune.yaml', 'ip': '127.0.0.1', 'port': '3020'}
+dataset_config.train_data_loader.num_works:  3
+model_config['model_load_path']:  output_skitti/half.pt
+pre-train
+load model and pre_weight
+matched parameter sets: 257, and no matched: 0
+ --------------------------------------- data_builder --------------------------------------- 
+imageset:  train
+split:  [0, 1, 2, 3, 4, 5, 6, 7, 9, 10]
+num_vote:  1
+imageset:  val
+split:  [8]
+num_vote:  1
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  True
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'imageset': 'train', 'batch_size': 8, 'num_workers': 3, 'rotate_aug': True, 'flip_aug': True, 'scale_aug': True, 'transform_aug': True, 'dropout_aug': True, 'polarmix_aug': False, 'mix_aug': True, 'instance_aug': False, 'd_point_num': 80000, 'SphereCrop': True, 'ShufflePoint': False}
+loader_config['SphereCrop']:  True
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  False
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'num_workers': 2, 'imageset': 'val', 'batch_size': 4, 'rotate_aug': False, 'flip_aug': False, 'scale_aug': False, 'transform_aug': False, 'dropout_aug': False, 'polarmix_aug': False, 'mix_aug': False, 'instance_aug': False, 'd_point_num': -1, 'SphereCrop': False, 'ShufflePoint': False}
+loader_config['SphereCrop']:  False
+1196
+optimizer:  AdamW
+learning_rate:  0.1
+ --- use_sparse: --- 
+ ------ mask add_module pre_weight ------ 
+train_hypers['distributed']:  True
+ training start 
+train hypers: {'seed': 1588147245, 'max_num_epochs': 50, 'learning_rate': 0.1, 'optimizer': 'AdamW', 'lr_scheduler': 'OneCycleLR', 'momentum': 0.9, 'weight_decay': 0.0001, 'nesterov': True, 'lambda_lovasz': 1, 'decay_step': 1, 'decay_rate': 0.8, 'eval_every_n_steps': 299, 'distributed': True, 'amp_enabled': False, 'local_rank': 0, 'world_size': 2, 'total_steps': 59800}
+dataset_config.train_data_loader.num_works:  3
+model_config['model_load_path']:  output_skitti/half.pt
+pre-train
+load model and pre_weight
+matched parameter sets: 257, and no matched: 0
+ --------------------------------------- data_builder --------------------------------------- 
+imageset:  train
+split:  [0, 1, 2, 3, 4, 5, 6, 7, 9, 10]
+num_vote:  1
+imageset:  val
+split:  [8]
+num_vote:  1
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  True
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'imageset': 'train', 'batch_size': 8, 'num_workers': 3, 'rotate_aug': True, 'flip_aug': True, 'scale_aug': True, 'transform_aug': True, 'dropout_aug': True, 'polarmix_aug': False, 'mix_aug': True, 'instance_aug': False, 'd_point_num': 80000, 'SphereCrop': True, 'ShufflePoint': False}
+loader_config['SphereCrop']:  True
+ ------ in compose ------ 
+self.cfg['SphereCrop']:  False
+self.cfg['ShufflePoint']:  False
+=============================
+loader_config:  {'data_path': '/home/ubuntu/data/kitti/dataset/sequences/', 'num_workers': 2, 'imageset': 'val', 'batch_size': 4, 'rotate_aug': False, 'flip_aug': False, 'scale_aug': False, 'transform_aug': False, 'dropout_aug': False, 'polarmix_aug': False, 'mix_aug': False, 'instance_aug': False, 'd_point_num': -1, 'SphereCrop': False, 'ShufflePoint': False}
+loader_config['SphereCrop']:  False
+1196
+optimizer:  AdamW
+learning_rate:  0.1
+ --- use_sparse: --- 
+ ------ mask add_module pre_weight ------ 
+train_hypers['distributed']:  True
+ training start 
+train hypers: {'seed': 1588147245, 'max_num_epochs': 50, 'learning_rate': 0.1, 'optimizer': 'AdamW', 'lr_scheduler': 'OneCycleLR', 'momentum': 0.9, 'weight_decay': 0.0001, 'nesterov': True, 'lambda_lovasz': 1, 'decay_step': 1, 'decay_rate': 0.8, 'eval_every_n_steps': 299, 'distributed': True, 'amp_enabled': False, 'local_rank': 1, 'world_size': 2, 'total_steps': 59800}
+validation start ... ...
+epoch 0 iter   298, loss: 4.038
+
+validation start ... ...
+validation time: 548.0029311180115
+validation start ... ...
+validation time: 548.0214095115662
+inference speed: 0.1143354286113262
+Validation per class iou: 
+car : 88.92%
+bicycle : 15.85%
+motorcycle : 41.46%
+truck : 3.37%
+bus : 28.82%
+person : 26.45%
+bicyclist : 78.95%
+motorcyclist : 1.72%
+road : 86.49%
+parking : 27.79%
+sidewalk : 72.14%
+other-ground : 1.94%
+building : 81.89%
+fence : 46.99%
+vegetation : 82.22%
+trunk : 51.99%
+terrain : 74.11%
+pole : 56.15%
+traffic-sign : 38.23%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 47.657 while the best val miou is 47.657
+epoch 0 iter   597, loss: 3.988
+
+validation start ... ...
+validation time: 550.3112428188324
+validation start ... ...
+validation time: 550.2475526332855
+inference speed: 0.1144336514436651
+Validation per class iou: 
+car : 90.59%
+bicycle : 35.98%
+motorcycle : 62.10%
+truck : 3.80%
+bus : 33.62%
+person : 55.47%
+bicyclist : 77.32%
+motorcyclist : 0.30%
+road : 88.43%
+parking : 25.93%
+sidewalk : 71.06%
+other-ground : 0.45%
+building : 85.14%
+fence : 48.81%
+vegetation : 83.88%
+trunk : 49.98%
+terrain : 71.31%
+pole : 48.99%
+traffic-sign : 40.88%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 51.265 while the best val miou is 51.265
+epoch 0 iter   896, loss: 3.995
+
+validation start ... ...
+validation time: 544.195897102356
+inference speed: 0.11422077797168421
+Validation per class iou: 
+car : 85.09%
+bicycle : 19.22%
+motorcycle : 54.39%
+truck : 10.41%
+bus : 25.91%
+person : 52.38%
+bicyclist : 75.12%
+motorcyclist : 2.05%
+road : 87.70%
+parking : 31.84%
+sidewalk : 73.03%
+other-ground : 2.27%
+building : 83.85%
+fence : 40.01%
+vegetation : 78.87%
+trunk : 60.32%
+terrain : 72.03%
+pole : 55.72%
+traffic-sign : 50.99%
+Current val miou is 50.590 while the best val miou is 51.265
+epoch 0 iter  1195, loss: 3.996
+
+validation time: 544.202024936676
+validation start ... ...
+validation start ... ...
+validation time: 526.9622578620911
+inference speed: 0.1140079545728758
+Validation per class iou: 
+car : 89.52%
+bicycle : 31.82%
+motorcycle : 63.07%
+truck : 16.00%
+bus : 17.31%
+person : 49.09%
+bicyclist : 73.02%
+motorcyclist : 0.25%
+road : 81.32%
+parking : 25.12%
+sidewalk : 68.87%
+other-ground : 1.14%
+building : 84.84%
+fence : 46.68%
+vegetation : 85.44%
+trunk : 60.97%
+terrain : 74.04%
+pole : 58.13%
+traffic-sign : 42.97%
+Current val miou is 51.032 while the best val miou is 51.265
+epoch 1 iter   298, loss: 3.959
+
+validation start ... ...
+validation time: 526.8560950756073
+validation start ... ...
+validation time: 544.4829552173615
+inference speed: 0.11404817650752114
+Validation per class iou: 
+car : 91.51%
+bicycle : 13.96%
+motorcycle : 58.21%
+truck : 45.46%
+bus : 42.49%
+person : 52.98%
+bicyclist : 65.58%
+motorcyclist : 6.57%
+road : 86.73%
+parking : 26.63%
+sidewalk : 71.55%
+other-ground : 0.57%
+building : 84.42%
+fence : 44.00%
+vegetation : 84.63%
+trunk : 56.88%
+terrain : 74.57%
+pole : 54.78%
+traffic-sign : 39.05%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 52.662 while the best val miou is 52.662
+epoch 1 iter   597, loss: 3.949
+
+validation start ... ...
+validation time: 544.6485435962677
+validation start ... ...
+validation time: 554.6209542751312
+validation start ... ...
+validation time: 554.6141309738159
+inference speed: 0.1142060490212081
+Validation per class iou: 
+car : 90.39%
+bicycle : 36.89%
+motorcycle : 62.97%
+truck : 54.68%
+bus : 26.92%
+person : 54.52%
+bicyclist : 65.87%
+motorcyclist : 2.98%
+road : 88.79%
+parking : 30.94%
+sidewalk : 74.36%
+other-ground : 2.67%
+building : 85.10%
+fence : 46.27%
+vegetation : 83.80%
+trunk : 59.53%
+terrain : 75.14%
+pole : 57.15%
+traffic-sign : 47.71%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 55.088 while the best val miou is 55.088
+epoch 1 iter   896, loss: 3.958
+
+validation start ... ...
+validation time: 542.1569261550903
+inference speed: 0.11414265298808245
+Validation per class iou: 
+car : 91.19%
+bicycle : 18.02%
+motorcycle : 60.55%
+truck : 43.21%
+bus : 23.61%
+person : 57.06%
+bicyclist : 72.80%
+motorcyclist : 0.74%
+road : 86.98%
+parking : 21.98%
+sidewalk : 69.41%
+other-ground : 1.33%
+building : 82.83%
+fence : 39.48%
+vegetation : 83.21%
+trunk : 58.89%
+terrain : 73.65%
+pole : 49.71%
+traffic-sign : 40.09%
+Current val miou is 51.302 while the best val miou is 55.088
+epoch 1 iter  1195, loss: 3.923
+
+validation time: 542.1498439311981
+validation start ... ...
+validation start ... ...
+validation time: 522.9363036155701
+inference speed: 0.11405576572638418
+Validation per class iou: 
+car : 87.88%
+bicycle : 37.94%
+motorcycle : 55.39%
+truck : 20.29%
+bus : 29.02%
+person : 57.90%
+bicyclist : 76.85%
+motorcyclist : 0.00%
+road : 88.44%
+parking : 33.23%
+sidewalk : 74.34%
+other-ground : 1.20%
+building : 85.40%
+fence : 45.60%
+vegetation : 83.71%
+trunk : 59.15%
+terrain : 73.39%
+pole : 57.06%
+traffic-sign : 45.78%
+Current val miou is 53.293 while the best val miou is 55.088
+epoch 2 iter   298, loss: 3.944
+
+validation start ... ...
+validation time: 522.5607116222382
+validation start ... ...
+validation time: 541.6531345844269
+validation start ... ...
+validation time: 541.6365785598755
+inference speed: 0.11411224340402766
+Validation per class iou: 
+car : 87.53%
+bicycle : 29.25%
+motorcycle : 63.53%
+truck : 25.13%
+bus : 33.83%
+person : 59.43%
+bicyclist : 75.57%
+motorcyclist : 1.47%
+road : 86.67%
+parking : 30.18%
+sidewalk : 72.99%
+other-ground : 1.68%
+building : 85.08%
+fence : 52.76%
+vegetation : 85.19%
+trunk : 60.04%
+terrain : 74.40%
+pole : 57.91%
+traffic-sign : 46.29%
+Current val miou is 54.154 while the best val miou is 55.088
+epoch 2 iter   597, loss: 3.937
+
+validation start ... ...
+validation time: 540.9820165634155
+validation start ... ...
+validation time: 540.9820423126221
+inference speed: 0.11418630303167589
+Validation per class iou: 
+car : 89.89%
+bicycle : 14.35%
+motorcycle : 41.32%
+truck : 16.38%
+bus : 26.62%
+person : 53.62%
+bicyclist : 77.35%
+motorcyclist : 5.94%
+road : 89.41%
+parking : 26.27%
+sidewalk : 71.04%
+other-ground : 0.84%
+building : 83.56%
+fence : 49.37%
+vegetation : 84.71%
+trunk : 61.34%
+terrain : 74.52%
+pole : 58.30%
+traffic-sign : 44.58%
+Current val miou is 51.022 while the best val miou is 55.088
+epoch 2 iter   896, loss: 3.927
+
+validation start ... ...
+validation time: 543.6432631015778
+inference speed: 0.11415883452908115
+Validation per class iou: 
+car : 90.73%
+bicycle : 33.44%
+motorcycle : 61.72%
+truck : 35.56%
+bus : 25.87%
+person : 55.18%
+bicyclist : 77.99%
+motorcyclist : 6.79%
+road : 89.50%
+parking : 31.53%
+sidewalk : 74.32%
+other-ground : 1.25%
+building : 82.36%
+fence : 50.11%
+vegetation : 84.74%
+trunk : 61.93%
+terrain : 71.78%
+pole : 58.37%
+traffic-sign : 44.02%
+Current val miou is 54.590 while the best val miou is 55.088
+epoch 2 iter  1195, loss: 3.952
+
+validation time: 543.6350693702698
+validation start ... ...
+validation start ... ...
+validation time: 525.3576138019562
+inference speed: 0.11414750791890298
+Validation per class iou: 
+car : 91.52%
+bicycle : 35.60%
+motorcycle : 51.07%
+truck : 31.37%
+bus : 33.16%
+person : 57.93%
+bicyclist : 76.55%
+motorcyclist : 5.58%
+road : 89.07%
+parking : 32.08%
+sidewalk : 74.95%
+other-ground : 1.03%
+building : 86.00%
+fence : 52.51%
+vegetation : 86.19%
+trunk : 61.27%
+terrain : 75.43%
+pole : 56.87%
+traffic-sign : 41.43%
+Current val miou is 54.716 while the best val miou is 55.088
+epoch 3 iter   298, loss: 3.906
+
+validation start ... ...
+validation time: 526.1455814838409
+validation start ... ...
+validation time: 541.1095807552338
+validation start ... ...
+validation time: 541.1212205886841
+inference speed: 0.11412803443284622
+Validation per class iou: 
+car : 91.76%
+bicycle : 44.08%
+motorcycle : 67.38%
+truck : 39.42%
+bus : 25.55%
+person : 54.06%
+bicyclist : 73.17%
+motorcyclist : 10.00%
+road : 88.52%
+parking : 35.55%
+sidewalk : 74.10%
+other-ground : 3.51%
+building : 80.44%
+fence : 47.00%
+vegetation : 86.37%
+trunk : 58.70%
+terrain : 74.38%
+pole : 55.58%
+traffic-sign : 47.85%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 55.653 while the best val miou is 55.653
+epoch 3 iter   597, loss: 3.912
+
+validation start ... ...
+validation time: 540.7129080295563
+validation start ... ...
+validation time: 540.7051975727081
+inference speed: 0.11409895579957224
+Validation per class iou: 
+car : 91.46%
+bicycle : 35.16%
+motorcycle : 53.25%
+truck : 41.92%
+bus : 38.57%
+person : 60.08%
+bicyclist : 77.12%
+motorcyclist : 19.36%
+road : 89.35%
+parking : 36.38%
+sidewalk : 75.17%
+other-ground : 1.05%
+building : 80.66%
+fence : 34.19%
+vegetation : 82.66%
+trunk : 59.61%
+terrain : 76.11%
+pole : 59.94%
+traffic-sign : 44.34%
+Current val miou is 55.599 while the best val miou is 55.653
+epoch 3 iter   896, loss: 3.918
+
+validation start ... ...
+validation time: 544.3990726470947
+inference speed: 0.11421693639303127
+Validation per class iou: 
+car : 90.56%
+bicycle : 42.34%
+motorcycle : 61.53%
+truck : 29.59%
+bus : 47.62%
+person : 58.37%
+bicyclist : 80.86%
+motorcyclist : 17.76%
+road : 88.95%
+parking : 37.99%
+sidewalk : 74.92%
+other-ground : 1.24%
+building : 86.27%
+fence : 45.36%
+vegetation : 83.62%
+trunk : 60.29%
+terrain : 74.26%
+pole : 56.71%
+traffic-sign : 40.52%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 56.777 while the best val miou is 56.777
+epoch 3 iter  1195, loss: 3.873
+
+validation time: 544.3959250450134
+validation start ... ...
+validation start ... ...
+validation time: 525.0389251708984
+validation start ... ...
+validation time: 524.8211953639984
+inference speed: 0.11424836764549981
+Validation per class iou: 
+car : 90.70%
+bicycle : 41.80%
+motorcycle : 57.73%
+truck : 46.27%
+bus : 31.07%
+person : 62.36%
+bicyclist : 60.29%
+motorcyclist : 13.21%
+road : 90.14%
+parking : 32.16%
+sidewalk : 75.72%
+other-ground : 3.48%
+building : 85.18%
+fence : 45.26%
+vegetation : 84.97%
+trunk : 61.24%
+terrain : 75.53%
+pole : 58.27%
+traffic-sign : 48.13%
+Current val miou is 55.974 while the best val miou is 56.777
+epoch 4 iter   298, loss: 3.873
+
+validation start ... ...
+validation time: 546.0626313686371
+inference speed: 0.11448623828939476
+Validation per class iou: 
+car : 91.45%
+bicycle : 33.59%
+motorcycle : 53.19%
+truck : 6.92%
+bus : 34.60%
+person : 42.60%
+bicyclist : 71.97%
+motorcyclist : 8.44%
+road : 88.32%
+parking : 35.27%
+sidewalk : 73.65%
+other-ground : 0.68%
+building : 84.24%
+fence : 35.40%
+vegetation : 80.17%
+trunk : 59.41%
+terrain : 74.47%
+pole : 55.12%
+traffic-sign : 45.09%
+Current val miou is 51.294 while the best val miou is 56.777
+epoch 4 iter   597, loss: 3.904
+
+validation start ... ...
+validation time: 546.0651891231537
+validation start ... ...
+validation time: 547.63529753685
+inference speed: 0.11429302506761918
+Validation per class iou: 
+car : 91.96%
+bicycle : 41.58%
+motorcycle : 64.31%
+truck : 20.36%
+bus : 33.62%
+person : 64.30%
+bicyclist : 72.65%
+motorcyclist : 4.65%
+road : 86.72%
+parking : 30.00%
+sidewalk : 71.37%
+other-ground : 1.55%
+building : 86.05%
+fence : 45.39%
+vegetation : 82.45%
+trunk : 61.56%
+terrain : 72.90%
+pole : 59.76%
+traffic-sign : 45.71%
+Current val miou is 54.573 while the best val miou is 56.777
+epoch 4 iter   896, loss: 3.909
+
+validation start ... ...
+validation time: 547.6245956420898
+validation start ... ...
+validation time: 541.3696193695068
+inference speed: 0.11426001747654217
+Validation per class iou: 
+car : 87.72%
+bicycle : 43.67%
+motorcycle : 34.18%
+truck : 27.44%
+bus : 21.10%
+person : 63.35%
+bicyclist : 82.46%
+motorcyclist : 6.08%
+road : 88.59%
+parking : 36.44%
+sidewalk : 74.89%
+other-ground : 0.67%
+building : 85.85%
+fence : 54.83%
+vegetation : 85.07%
+trunk : 61.43%
+terrain : 74.53%
+pole : 58.45%
+traffic-sign : 46.71%
+Current val miou is 54.393 while the best val miou is 56.777
+epoch 4 iter  1195, loss: 3.876
+
+validation time: 541.4119398593903
+validation start ... ...
+validation start ... ...
+validation time: 525.2336978912354
+inference speed: 0.11407283605155298
+Validation per class iou: 
+car : 90.61%
+bicycle : 24.70%
+motorcycle : 67.11%
+truck : 27.39%
+bus : 32.37%
+person : 61.95%
+bicyclist : 81.71%
+motorcyclist : 8.05%
+road : 84.89%
+parking : 27.79%
+sidewalk : 69.72%
+other-ground : 0.89%
+building : 86.66%
+fence : 46.03%
+vegetation : 84.72%
+trunk : 60.93%
+terrain : 74.52%
+pole : 56.54%
+traffic-sign : 39.86%
+Current val miou is 54.024 while the best val miou is 56.777
+epoch 5 iter   298, loss: 3.868
+
+validation start ... ...
+validation time: 525.2757213115692
+validation start ... ...
+validation time: 545.3879714012146
+validation start ... ...
+validation time: 545.3615310192108
+inference speed: 0.11407512014956417
+Validation per class iou: 
+car : 88.50%
+bicycle : 44.92%
+motorcycle : 58.58%
+truck : 24.48%
+bus : 25.95%
+person : 53.87%
+bicyclist : 82.97%
+motorcyclist : 11.31%
+road : 90.05%
+parking : 31.97%
+sidewalk : 75.39%
+other-ground : 3.54%
+building : 80.87%
+fence : 42.13%
+vegetation : 84.04%
+trunk : 61.76%
+terrain : 74.33%
+pole : 53.89%
+traffic-sign : 28.96%
+Current val miou is 53.553 while the best val miou is 56.777
+epoch 5 iter   597, loss: 3.902
+
+validation start ... ...
+validation time: 540.2420525550842
+inference speed: 0.11406191968999838
+Validation per class iou: 
+car : 91.54%
+bicycle : 39.32%
+motorcycle : 53.83%
+truck : 17.28%
+bus : 46.51%
+person : 63.56%
+bicyclist : 69.90%
+motorcyclist : 2.60%
+road : 90.32%
+parking : 34.27%
+sidewalk : 71.52%
+other-ground : 0.16%
+building : 86.78%
+fence : 46.93%
+vegetation : 81.66%
+trunk : 58.62%
+terrain : 70.84%
+pole : 57.74%
+traffic-sign : 50.44%
+Current val miou is 54.411 while the best val miou is 56.777
+epoch 5 iter   896, loss: 3.922
+
+validation start ... ...
+validation time: 540.247599363327
+validation start ... ...
+validation time: 544.0775363445282
+inference speed: 0.1142566099825142
+Validation per class iou: 
+car : 89.10%
+bicycle : 30.99%
+motorcycle : 47.07%
+truck : 40.67%
+bus : 41.40%
+person : 55.28%
+bicyclist : 75.48%
+motorcyclist : 8.69%
+road : 87.44%
+parking : 30.16%
+sidewalk : 73.80%
+other-ground : 1.80%
+building : 80.53%
+fence : 40.52%
+vegetation : 80.62%
+trunk : 52.43%
+terrain : 73.15%
+pole : 48.76%
+traffic-sign : 40.17%
+Current val miou is 52.529 while the best val miou is 56.777
+epoch 5 iter  1195, loss: 3.891
+
+validation time: 544.0763962268829
+validation start ... ...
+validation start ... ...
+validation time: 525.9668543338776
+inference speed: 0.11406090528365875
+Validation per class iou: 
+car : 91.96%
+bicycle : 32.78%
+motorcycle : 59.88%
+truck : 55.30%
+bus : 40.84%
+person : 60.50%
+bicyclist : 81.44%
+motorcyclist : 5.97%
+road : 86.42%
+parking : 32.16%
+sidewalk : 73.08%
+other-ground : 1.12%
+building : 82.67%
+fence : 45.07%
+vegetation : 85.41%
+trunk : 62.75%
+terrain : 75.40%
+pole : 58.48%
+traffic-sign : 47.65%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 56.783 while the best val miou is 56.783
+epoch 6 iter   298, loss: 3.927
+
+validation start ... ...
+validation time: 526.9897165298462
+validation start ... ...
+validation time: 541.9351487159729
+validation start ... ...
+validation time: 541.9070391654968
+inference speed: 0.11414745667442822
+Validation per class iou: 
+car : 89.52%
+bicycle : 44.86%
+motorcycle : 63.92%
+truck : 26.56%
+bus : 20.84%
+person : 60.99%
+bicyclist : 83.82%
+motorcyclist : 13.77%
+road : 83.13%
+parking : 24.31%
+sidewalk : 70.04%
+other-ground : 3.17%
+building : 82.49%
+fence : 46.28%
+vegetation : 86.75%
+trunk : 61.15%
+terrain : 74.33%
+pole : 55.57%
+traffic-sign : 47.76%
+Current val miou is 54.697 while the best val miou is 56.783
+epoch 6 iter   597, loss: 3.895
+
+validation start ... ...
+validation time: 540.6674013137817
+inference speed: 0.11408473449150429
+Validation per class iou: 
+car : 87.84%
+bicycle : 41.64%
+motorcycle : 70.17%
+truck : 33.26%
+bus : 33.21%
+person : 57.47%
+bicyclist : 57.91%
+motorcyclist : 13.05%
+road : 89.73%
+parking : 32.84%
+sidewalk : 71.73%
+other-ground : 0.60%
+building : 85.21%
+fence : 39.65%
+vegetation : 81.31%
+trunk : 59.75%
+terrain : 70.63%
+pole : 57.31%
+traffic-sign : 48.20%
+Current val miou is 54.289 while the best val miou is 56.783
+epoch 6 iter   896, loss: 3.861
+
+validation start ... ...
+validation time: 540.6605241298676
+validation start ... ...
+validation time: 540.7196733951569
+inference speed: 0.11416270410185861
+Validation per class iou: 
+car : 90.84%
+bicycle : 35.48%
+motorcycle : 73.09%
+truck : 41.79%
+bus : 26.10%
+person : 62.75%
+bicyclist : 83.35%
+motorcyclist : 7.23%
+road : 87.06%
+parking : 32.51%
+sidewalk : 73.97%
+other-ground : 1.09%
+building : 85.96%
+fence : 54.78%
+vegetation : 86.94%
+trunk : 62.69%
+terrain : 74.49%
+pole : 60.92%
+traffic-sign : 46.68%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 57.248 while the best val miou is 57.248
+epoch 6 iter  1195, loss: 3.857
+
+validation time: 540.7198858261108
+validation start ... ...
+validation start ... ...
+validation time: 524.1105599403381
+inference speed: 0.11418004956593299
+Validation per class iou: 
+car : 87.54%
+bicycle : 44.24%
+motorcycle : 59.02%
+truck : 52.38%
+bus : 37.70%
+person : 47.25%
+bicyclist : 77.02%
+motorcyclist : 0.19%
+road : 89.35%
+parking : 37.35%
+sidewalk : 74.96%
+other-ground : 1.14%
+building : 84.57%
+fence : 40.53%
+vegetation : 82.44%
+trunk : 53.27%
+terrain : 74.17%
+pole : 55.63%
+traffic-sign : 46.77%
+Current val miou is 55.027 while the best val miou is 57.248
+epoch 7 iter   298, loss: 3.854
+
+validation start ... ...
+validation time: 524.4281859397888
+validation start ... ...
+validation time: 542.7174723148346
+inference speed: 0.1141488581961714
+Validation per class iou: 
+car : 92.00%
+bicycle : 35.00%
+motorcycle : 65.59%
+truck : 4.57%
+bus : 33.05%
+person : 37.43%
+bicyclist : 6.79%
+motorcyclist : 0.00%
+road : 90.24%
+parking : 37.68%
+sidewalk : 75.69%
+other-ground : 2.66%
+building : 85.33%
+fence : 46.90%
+vegetation : 83.70%
+trunk : 58.10%
+terrain : 70.83%
+pole : 58.69%
+traffic-sign : 45.41%
+Current val miou is 48.930 while the best val miou is 57.248
+epoch 7 iter   597, loss: 3.872
+
+validation start ... ...
+validation time: 542.6973361968994
+validation start ... ...
+validation time: 538.9766738414764
+inference speed: 0.11421749943803727
+Validation per class iou: 
+car : 90.84%
+bicycle : 40.41%
+motorcycle : 62.93%
+truck : 30.26%
+bus : 34.07%
+person : 63.26%
+bicyclist : 78.27%
+motorcyclist : 31.73%
+road : 88.52%
+parking : 31.71%
+sidewalk : 75.29%
+other-ground : 1.14%
+building : 85.85%
+fence : 50.18%
+vegetation : 84.21%
+trunk : 59.68%
+terrain : 70.62%
+pole : 60.78%
+traffic-sign : 49.29%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 57.317 while the best val miou is 57.317
+epoch 7 iter   896, loss: 3.901
+
+validation start ... ...
+validation time: 538.9884643554688
+validation start ... ...
+validation time: 541.2081167697906
+inference speed: 0.1142162363642236
+Validation per class iou: 
+car : 91.35%
+bicycle : 38.50%
+motorcycle : 65.69%
+truck : 33.82%
+bus : 38.10%
+person : 56.41%
+bicyclist : 78.81%
+motorcyclist : 28.82%
+road : 89.21%
+parking : 32.35%
+sidewalk : 74.03%
+other-ground : 0.25%
+building : 86.95%
+fence : 51.69%
+vegetation : 86.64%
+trunk : 61.37%
+terrain : 74.90%
+pole : 57.88%
+traffic-sign : 48.07%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 57.623 while the best val miou is 57.623
+epoch 7 iter  1195, loss: 3.885
+
+validation time: 541.2010595798492
+validation start ... ...
+validation start ... ...
+validation time: 524.6971607208252
+inference speed: 0.11418536001621023
+Validation per class iou: 
+car : 92.15%
+bicycle : 31.61%
+motorcycle : 65.71%
+truck : 32.43%
+bus : 29.34%
+person : 64.87%
+bicyclist : 78.92%
+motorcyclist : 4.03%
+road : 89.04%
+parking : 32.46%
+sidewalk : 74.98%
+other-ground : 0.15%
+building : 85.68%
+fence : 42.53%
+vegetation : 84.57%
+trunk : 59.16%
+terrain : 75.59%
+pole : 58.81%
+traffic-sign : 50.80%
+Current val miou is 55.412 while the best val miou is 57.623
+epoch 8 iter   298, loss: 3.869
+
+validation start ... ...
+validation time: 524.5241401195526
+validation start ... ...
+validation time: 542.1660761833191
+validation start ... ...
+validation time: 542.1679937839508
+inference speed: 0.11416230509773691
+Validation per class iou: 
+car : 92.42%
+bicycle : 36.17%
+motorcycle : 64.09%
+truck : 21.91%
+bus : 31.21%
+person : 63.55%
+bicyclist : 85.51%
+motorcyclist : 30.02%
+road : 89.93%
+parking : 36.99%
+sidewalk : 75.14%
+other-ground : 0.82%
+building : 86.48%
+fence : 41.49%
+vegetation : 84.53%
+trunk : 59.55%
+terrain : 75.05%
+pole : 58.72%
+traffic-sign : 48.62%
+Current val miou is 56.958 while the best val miou is 57.623
+epoch 8 iter   597, loss: 3.891
+
+validation start ... ...
+validation time: 546.954265832901
+validation start ... ...
+validation time: 546.9595086574554
+inference speed: 0.11417847100185019
+Validation per class iou: 
+car : 90.02%
+bicycle : 40.95%
+motorcycle : 68.21%
+truck : 27.70%
+bus : 28.34%
+person : 55.57%
+bicyclist : 80.85%
+motorcyclist : 19.38%
+road : 90.13%
+parking : 34.03%
+sidewalk : 72.86%
+other-ground : 0.33%
+building : 85.01%
+fence : 51.54%
+vegetation : 85.62%
+trunk : 57.90%
+terrain : 74.66%
+pole : 55.06%
+traffic-sign : 44.55%
+Current val miou is 55.932 while the best val miou is 57.623
+epoch 8 iter   896, loss: 3.866
+
+validation start ... ...
+validation time: 540.3759932518005
+inference speed: 0.11419002015946159
+Validation per class iou: 
+car : 89.99%
+bicycle : 18.11%
+motorcycle : 67.65%
+truck : 46.69%
+bus : 32.24%
+person : 61.60%
+bicyclist : 77.89%
+motorcyclist : 24.40%
+road : 88.27%
+parking : 32.12%
+sidewalk : 74.22%
+other-ground : 0.74%
+building : 83.01%
+fence : 45.62%
+vegetation : 83.14%
+trunk : 55.19%
+terrain : 75.02%
+pole : 49.95%
+traffic-sign : 45.38%
+Current val miou is 55.328 while the best val miou is 57.623
+epoch 8 iter  1195, loss: 3.895
+
+validation time: 540.3736481666565
+validation start ... ...
+validation start ... ...
+validation time: 527.1751601696014
+validation start ... ...
+validation time: 526.7949092388153
+inference speed: 0.1142145845937483
+Validation per class iou: 
+car : 91.66%
+bicycle : 40.80%
+motorcycle : 65.87%
+truck : 29.06%
+bus : 39.55%
+person : 67.87%
+bicyclist : 84.30%
+motorcyclist : 24.11%
+road : 89.93%
+parking : 34.43%
+sidewalk : 76.11%
+other-ground : 3.87%
+building : 85.93%
+fence : 46.59%
+vegetation : 83.90%
+trunk : 63.30%
+terrain : 76.17%
+pole : 58.17%
+traffic-sign : 47.54%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 58.377 while the best val miou is 58.377
+epoch 9 iter   298, loss: 3.883
+
+validation start ... ...
+validation time: 541.9387323856354
+inference speed: 0.11417830309566834
+Validation per class iou: 
+car : 85.52%
+bicycle : 38.98%
+motorcycle : 63.82%
+truck : 30.04%
+bus : 33.19%
+person : 52.39%
+bicyclist : 77.17%
+motorcyclist : 14.12%
+road : 88.56%
+parking : 37.04%
+sidewalk : 70.17%
+other-ground : 2.23%
+building : 84.34%
+fence : 43.51%
+vegetation : 83.57%
+trunk : 61.34%
+terrain : 72.04%
+pole : 59.64%
+traffic-sign : 48.97%
+Current val miou is 55.085 while the best val miou is 58.377
+epoch 9 iter   597, loss: 3.858
+
+validation start ... ...
+validation time: 541.9458563327789
+validation start ... ...
+validation time: 543.3751981258392
+inference speed: 0.11419991180721649
+Validation per class iou: 
+car : 92.32%
+bicycle : 48.11%
+motorcycle : 64.10%
+truck : 41.71%
+bus : 38.30%
+person : 45.40%
+bicyclist : 83.98%
+motorcyclist : 13.66%
+road : 88.42%
+parking : 28.39%
+sidewalk : 71.11%
+other-ground : 1.58%
+building : 85.83%
+fence : 44.81%
+vegetation : 83.59%
+trunk : 63.35%
+terrain : 73.38%
+pole : 58.45%
+traffic-sign : 46.27%
+Current val miou is 56.462 while the best val miou is 58.377
+epoch 9 iter   896, loss: 3.881
+
+validation start ... ...
+validation time: 543.3844437599182
+validation start ... ...
+validation time: 544.1545495986938
+inference speed: 0.11438211408477836
+Validation per class iou: 
+car : 87.12%
+bicycle : 39.79%
+motorcycle : 70.87%
+truck : 40.68%
+bus : 36.44%
+person : 61.20%
+bicyclist : 72.26%
+motorcyclist : 9.60%
+road : 90.04%
+parking : 37.06%
+sidewalk : 74.50%
+other-ground : 3.19%
+building : 83.11%
+fence : 46.88%
+vegetation : 84.29%
+trunk : 53.16%
+terrain : 73.79%
+pole : 55.83%
+traffic-sign : 42.56%
+Current val miou is 55.913 while the best val miou is 58.377
+epoch 9 iter  1195, loss: 3.873
+
+validation time: 544.1440026760101
+validation start ... ...
+validation start ... ...
+validation time: 524.9078366756439
+validation start ... ...
+validation time: 525.4746124744415
+inference speed: 0.11411978711779713
+Validation per class iou: 
+car : 90.08%
+bicycle : 40.09%
+motorcycle : 65.36%
+truck : 17.14%
+bus : 25.59%
+person : 66.28%
+bicyclist : 84.29%
+motorcyclist : 10.43%
+road : 89.47%
+parking : 30.92%
+sidewalk : 75.14%
+other-ground : 1.27%
+building : 84.64%
+fence : 52.36%
+vegetation : 85.53%
+trunk : 60.26%
+terrain : 75.28%
+pole : 50.75%
+traffic-sign : 46.86%
+Current val miou is 55.354 while the best val miou is 58.377
+epoch 10 iter   298, loss: 3.893
+
+validation start ... ...
+validation time: 543.595351934433
+validation start ... ...
+validation time: 543.4723365306854
+inference speed: 0.11413270400508092
+Validation per class iou: 
+car : 91.47%
+bicycle : 47.44%
+motorcycle : 71.71%
+truck : 42.62%
+bus : 44.93%
+person : 60.38%
+bicyclist : 81.23%
+motorcyclist : 10.85%
+road : 90.27%
+parking : 40.35%
+sidewalk : 76.15%
+other-ground : 1.10%
+building : 86.97%
+fence : 53.21%
+vegetation : 85.14%
+trunk : 59.68%
+terrain : 75.06%
+pole : 57.20%
+traffic-sign : 46.95%
+Saved: output_skitti/opensource_9ks_s030_w64_0.pt
+Current val miou is 59.090 while the best val miou is 59.090
+epoch 10 iter   597, loss: 3.843
+
+validation start ... ...
+validation time: 543.3540344238281
+inference speed: 0.11417053232495189
+Validation per class iou: 
+car : 90.91%
+bicycle : 39.74%
+motorcycle : 66.17%
+truck : 36.98%
+bus : 31.94%
+person : 39.85%
+bicyclist : 32.41%
+motorcyclist : 18.16%
+road : 88.96%
+parking : 31.83%
+sidewalk : 74.14%
+other-ground : 1.09%
+building : 83.82%
+fence : 41.78%
+vegetation : 82.17%
+trunk : 61.22%
+terrain : 74.15%
+pole : 56.01%
+traffic-sign : 45.41%
+Current val miou is 52.461 while the best val miou is 59.090
+epoch 10 iter   896, loss: 3.905
+
+validation start ... ...
+validation time: 543.3552415370941
+validation start ... ...
+validation time: 550.501494884491
+inference speed: 0.11416211522963732
+Validation per class iou: 
+car : 91.09%
+bicycle : 39.32%
+motorcycle : 47.99%
+truck : 15.55%
+bus : 32.10%
+person : 58.61%
+bicyclist : 82.52%
+motorcyclist : 25.28%
+road : 90.37%
+parking : 34.63%
+sidewalk : 75.56%
+other-ground : 0.77%
+building : 82.51%
+fence : 37.31%
+vegetation : 77.05%
+trunk : 54.50%
+terrain : 74.14%
+pole : 47.55%
+traffic-sign : 47.63%
+Current val miou is 53.393 while the best val miou is 59.090
+epoch 10 iter  1195, loss: 3.862
+
+validation time: 550.4982626438141
+validation start ... ...
+validation start ... ...
+validation time: 526.2705302238464
+inference speed: 0.11426161437150566
+Validation per class iou: 
+car : 91.60%
+bicycle : 46.09%
+motorcycle : 50.03%
+truck : 13.66%
+bus : 34.86%
+person : 66.60%
+bicyclist : 87.82%
+motorcyclist : 12.10%
+road : 89.43%
+parking : 37.52%
+sidewalk : 75.77%
+other-ground : 0.45%
+building : 84.93%
+fence : 39.38%
+vegetation : 81.68%
+trunk : 63.70%
+terrain : 73.74%
+pole : 59.57%
+traffic-sign : 48.96%
+Current val miou is 55.678 while the best val miou is 59.090
+epoch 11 iter   298, loss: 3.851
+
+validation start ... ...
+validation time: 526.4255390167236
+validation start ... ...
+validation time: 542.13769364357
+validation start ... ...
+validation time: 542.1000952720642
+inference speed: 0.1141907011546072
+Validation per class iou: 
+car : 90.36%
+bicycle : 38.52%
+motorcycle : 58.34%
+truck : 45.55%
+bus : 43.19%
+person : 61.24%
+bicyclist : 83.69%
+motorcyclist : 5.55%
+road : 89.12%
+parking : 26.60%
+sidewalk : 74.60%
+other-ground : 2.01%
+building : 83.66%
+fence : 42.92%
+vegetation : 85.79%
+trunk : 63.09%
+terrain : 74.74%
+pole : 54.78%
+traffic-sign : 49.00%
+Current val miou is 56.460 while the best val miou is 59.090
+epoch 11 iter   597, loss: 3.851
+
+validation start ... ...
+validation time: 542.5379393100739
+inference speed: 0.11427650947121021
+Validation per class iou: 
+car : 92.81%
+bicycle : 46.36%
+motorcycle : 63.41%
+truck : 24.68%
+bus : 33.82%
+person : 64.02%
+bicyclist : 75.12%
+motorcyclist : 9.07%
+road : 88.57%
+parking : 23.73%
+sidewalk : 75.36%
+other-ground : 1.27%
+building : 86.32%
+fence : 46.07%
+vegetation : 84.83%
+trunk : 59.67%
+terrain : 75.04%
+pole : 60.86%
+traffic-sign : 45.57%
+Current val miou is 55.609 while the best val miou is 59.090
+epoch 11 iter   896, loss: 3.867
+
+validation start ... ...
+validation time: 542.5356576442719
+validation start ... ...
+validation time: 540.1082234382629
+inference speed: 0.11419276580913622
+Validation per class iou: 
+car : 93.22%
+bicycle : 45.52%
+motorcycle : 61.30%
+truck : 26.40%
+bus : 41.51%
+person : 62.29%
+bicyclist : 84.36%
+motorcyclist : 18.88%
+road : 89.52%
+parking : 34.10%
+sidewalk : 76.21%
+other-ground : 2.70%
+building : 84.22%
+fence : 47.68%
+vegetation : 86.32%
+trunk : 54.32%
+terrain : 75.42%
+pole : 56.96%
+traffic-sign : 43.52%
+Current val miou is 57.076 while the best val miou is 59.090
+epoch 11 iter  1195, loss: 3.850
+
+validation time: 540.1598324775696
+validation start ... ...
+validation start ... ...
+validation time: 521.5960094928741
+validation start ... ...
+validation time: 521.9528889656067
+inference speed: 0.11413703501239159
+Validation per class iou: 
+car : 91.02%
+bicycle : 45.70%
+motorcycle : 57.14%
+truck : 24.39%
+bus : 35.82%
+person : 60.54%
+bicyclist : 73.85%
+motorcyclist : 14.71%
+road : 88.82%
+parking : 36.20%
+sidewalk : 73.85%
+other-ground : 1.22%
+building : 84.62%
+fence : 55.03%
+vegetation : 85.62%
+trunk : 54.30%
+terrain : 72.70%
+pole : 56.27%
+traffic-sign : 43.37%
+Current val miou is 55.535 while the best val miou is 59.090
+epoch 12 iter   298, loss: 3.848
+
+validation start ... ...
+validation time: 542.3744971752167
+validation start ... ...
+validation time: 542.3835053443909
+inference speed: 0.11419438255767335
+Validation per class iou: 
+car : 88.00%
+bicycle : 35.46%
+motorcycle : 51.93%
+truck : 30.04%
+bus : 27.73%
+person : 64.25%
+bicyclist : 63.25%
+motorcyclist : 12.78%
+road : 87.69%
+parking : 34.75%
+sidewalk : 73.77%
+other-ground : 1.40%
+building : 76.23%
+fence : 42.14%
+vegetation : 77.34%
+trunk : 60.80%
+terrain : 72.14%
+pole : 57.26%
+traffic-sign : 38.94%
+Current val miou is 52.416 while the best val miou is 59.090
+epoch 12 iter   597, loss: 3.834
+
+validation start ... ...
+validation time: 542.4307291507721
+inference speed: 0.11418861693933009
+Validation per class iou: 
+car : 90.93%
+bicycle : 37.87%
+motorcycle : 57.59%
+truck : 47.37%
+bus : 24.28%
+person : 63.77%
+bicyclist : 84.05%
+motorcyclist : 10.46%
+road : 90.09%
+parking : 34.22%
+sidewalk : 75.24%
+other-ground : 2.04%
+building : 87.11%
+fence : 52.00%
+vegetation : 85.04%
+trunk : 62.34%
+terrain : 75.45%
+pole : 57.51%
+traffic-sign : 45.58%
+Current val miou is 56.997 while the best val miou is 59.090
+epoch 12 iter   896, loss: 3.877
+
+validation start ... ...
+validation time: 542.436594247818
+validation start ... ...
+validation time: 543.4542074203491
+inference speed: 0.11422022546839872
+Validation per class iou: 
+car : 93.12%
+bicycle : 50.26%
+motorcycle : 71.59%
+truck : 34.09%
+bus : 46.95%
+person : 69.83%
+bicyclist : 86.11%
+motorcyclist : 3.80%
+road : 90.16%
+parking : 41.90%
+sidewalk : 74.19%
+other-ground : 0.53%
+building : 85.20%
+fence : 47.34%
+vegetation : 81.86%
+trunk : 56.35%
+terrain : 72.64%
+pole : 60.99%
+traffic-sign : 48.29%
+Current val miou is 58.696 while the best val miou is 59.090
+epoch 12 iter  1195, loss: 3.850
+
+validation time: 543.4597644805908
+validation start ... ...
+validation start ... ...
+validation time: 525.8189616203308
+validation start ... ...
+validation time: 525.1747934818268
+inference speed: 0.11419179421389493
+Validation per class iou: 
+car : 92.64%
+bicycle : 42.28%
+motorcycle : 63.54%
+truck : 14.06%
+bus : 38.82%
+person : 66.77%
+bicyclist : 86.17%
+motorcyclist : 15.37%
+road : 90.17%
+parking : 37.32%
+sidewalk : 76.23%
+other-ground : 1.74%
+building : 87.41%
+fence : 52.26%
+vegetation : 86.34%
+trunk : 60.11%
+terrain : 76.31%
+pole : 57.42%
+traffic-sign : 48.11%
+Current val miou is 57.530 while the best val miou is 59.090
+epoch 13 iter   298, loss: 3.878
+
+validation start ... ...
+validation time: 540.7095167636871
+validation start ... ...
+validation time: 540.7182765007019
+inference speed: 0.11420242120522124
+Validation per class iou: 
+car : 92.91%
+bicycle : 44.84%
+motorcycle : 62.32%
+truck : 35.28%
+bus : 33.55%
+person : 68.83%
+bicyclist : 84.17%
+motorcyclist : 37.16%
+road : 89.14%
+parking : 34.86%
+sidewalk : 75.03%
+other-ground : 1.54%
+building : 85.43%
+fence : 45.39%
+vegetation : 83.72%
+trunk : 62.57%
+terrain : 75.91%
+pole : 52.04%
+traffic-sign : 48.52%
+Current val miou is 58.590 while the best val miou is 59.090
+epoch 13 iter   597, loss: 3.859
+
+validation start ... ...
+validation time: 543.4167277812958
+validation start ... ...
+validation time: 543.401449918747
+inference speed: 0.11426832031131932
+Validation per class iou: 
+car : 92.22%
+bicycle : 33.91%
+motorcycle : 67.50%
+truck : 38.22%
+bus : 41.17%
+person : 70.03%
+bicyclist : 83.81%
+motorcyclist : 29.45%
+road : 89.40%
+parking : 38.44%
+sidewalk : 75.19%
+other-ground : 2.46%
+building : 84.83%
+fence : 42.22%
+vegetation : 83.26%
+trunk : 57.72%
+terrain : 76.01%
+pole : 54.16%
+traffic-sign : 46.77%
+Current val miou is 58.251 while the best val miou is 59.090
+epoch 13 iter   896, loss: 3.845
+
+validation start ... ...
+validation time: 544.9234395027161
+inference speed: 0.1142914281726557
+Validation per class iou: 
+car : 87.78%
+bicycle : 29.52%
+motorcycle : 54.35%
+truck : 44.96%
+bus : 28.32%
+person : 64.19%
+bicyclist : 82.61%
+motorcyclist : 42.76%
+road : 87.46%
+parking : 34.46%
+sidewalk : 73.95%
+other-ground : 0.93%
+building : 87.01%
+fence : 50.23%
+vegetation : 84.91%
+trunk : 62.92%
+terrain : 75.92%
+pole : 56.69%
+traffic-sign : 46.41%
+Current val miou is 57.651 while the best val miou is 59.090
+epoch 13 iter  1195, loss: 3.879
+
+validation time: 544.91894698143
+validation start ... ...
+validation start ... ...
+validation time: 526.7542772293091
+validation start ... ...
+validation time: 526.5649149417877
+inference speed: 0.11421907981763861
+Validation per class iou: 
+car : 88.28%
+bicycle : 44.31%
+motorcycle : 65.94%
+truck : 41.91%
+bus : 41.99%
+person : 69.35%
+bicyclist : 81.39%
+motorcyclist : 4.45%
+road : 90.69%
+parking : 38.96%
+sidewalk : 75.98%
+other-ground : 0.42%
+building : 85.25%
+fence : 49.07%
+vegetation : 84.56%
+trunk : 47.68%
+terrain : 76.36%
+pole : 57.97%
+traffic-sign : 48.20%
+Current val miou is 57.513 while the best val miou is 59.090
+epoch 14 iter   298, loss: 3.866
+
+validation start ... ...

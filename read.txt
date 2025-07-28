@@ -1,0 +1,15 @@
+  File "/home/ubuntu/data/software/anaconda3/envs/lsk3d/lib/python3.9/site-packages/torch/utils/data/_utils/worker.py", line 287, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/home/ubuntu/data/software/anaconda3/envs/lsk3d/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/ubuntu/data/software/anaconda3/envs/lsk3d/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/ubuntu/data/zrb/code/LSK3DNet/dataloader/dataset2.py", line 114, in __getitem__
+    extra_single = self.get_single_sample(extra_data, extra_root, random_index, cut_scene=True)
+  File "/home/ubuntu/data/zrb/code/LSK3DNet/dataloader/dataset2.py", line 174, in get_single_sample
+    xyz, labels, instance_label, sig = polarmix(
+  File "/home/ubuntu/data/zrb/code/LSK3DNet/dataloader/utils.py", line 264, in polarmix
+    sig1_out = np.concatenate([sig1_target, sig1_rest], axis=0)
+  File "<__array_function__ internals>", line 180, in concatenate
+ValueError: all the input arrays must have same number of dimensions, but the array at index 0 has 1 dimension(s) and the array at index 1 has 2 dimension(s)
+

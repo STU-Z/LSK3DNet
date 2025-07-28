@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ubuntu/data/zrb/code/LSK3DNet/c_utils/src/c_gen_virtual_scan.cpp
+iostream
+-
+pybind11/pybind11.h
+-
+pybind11/numpy.h
+-
+

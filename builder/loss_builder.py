@@ -180,17 +180,17 @@ class criterion(nn.Module):
         self.config = config
         self.lambda_lovasz = self.config['train_params']['lambda_lovasz']
         self.lambda_cc = 1.0
-        self.dice_weight = self.config['train_params']['dice_weight']
+        self.dice_weight = self.config['train_params'].get('dice_weight', 0.0)
         if 'seg_labelweights' in config['dataset_params']:
             seg_num_per_class = config['dataset_params']['seg_labelweights']
             weight = seg_num_per_class / np.sum(seg_num_per_class).astype(float)
             seg_labelweights = 1 / (weight + 0.02)
-            seg_labelweights[8] = 2000
-            seg_labelweights[12] = 2000
+            # seg_labelweights[8] = 2e4
+            # seg_labelweights[12] = 2000
             seg_labelweights = torch.from_numpy(seg_labelweights).float()
         else:
             seg_labelweights = None
-        seg_labelweights = torch.from_numpy(seg_labelweights).float().to(device)
+        # seg_labelweights = torch.from_numpy(seg_labelweights).float().to(device)
         self.ce_loss = nn.CrossEntropyLoss( 
             ignore_index=config['dataset_params']['ignore_label'],
             weight=seg_labelweights,
@@ -226,9 +226,10 @@ class criterion(nn.Module):
         loss_main_ce = self.ce_loss(data_dict['logits'], data_dict['labels'].long())
         loss_main_lovasz = self.lovasz_loss(torch.nn.functional.softmax(data_dict['logits'], dim=1), data_dict['labels'].long())
         loss_main_focal = self.focal_loss(data_dict['logits'], data_dict['labels'].long())
-        loss_main_dice = self.dice_loss(data_dict['logits'], data_dict['labels'].long())
+        # loss_main_dice = self.dice_loss(data_dict['logits'], data_dict['labels'].long())
         # loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz 
-        loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz +self.dice_weight*loss_main_dice+loss_main_focal
+        # loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz +self.dice_weight*loss_main_dice+0.5*loss_main_focal
+        loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz + loss_main_focal
 
         return loss_main
     

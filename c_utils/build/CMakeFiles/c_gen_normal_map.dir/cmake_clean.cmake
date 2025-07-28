@@ -1,6 +1,5 @@
 file(REMOVE_RECURSE
   "CMakeFiles/c_gen_normal_map.dir/src/c_gen_normal_map.cpp.o"
-  "CMakeFiles/c_gen_normal_map.dir/src/c_gen_normal_map.cpp.o.d"
   "c_gen_normal_map.cpython-39-x86_64-linux-gnu.so"
   "c_gen_normal_map.pdb"
 )

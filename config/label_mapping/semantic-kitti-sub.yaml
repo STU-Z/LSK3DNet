@@ -183,9 +183,7 @@ learning_ignore: # Ignore classes
   17: False    # "terrain"
   18: False    # "pole"
   19: False    # "traffic-sign"
-thing_class: # thing class in panoptic segmentation 
-#用途：用于全景分割（panoptic segmentation）任务
-#标记哪些类别是“thing”（可实例分割的物体），哪些是“stuff”（背景类）
+thing_class: # thing class in panoptic segmentation
   0: False      # "unlabeled", and others ignored
   1: True     # "car"
   2: True     # "bicycle"
@@ -221,14 +219,15 @@ split: # sequence numbers
   valid:
     - 8
   test:
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
+    - 1
+    # - 11
+    # - 12
+    # - 13
+    # - 14
+    # - 15
+    # - 16
+    # - 17
+    # - 18
+    # - 19
+    # - 20
+    # - 21

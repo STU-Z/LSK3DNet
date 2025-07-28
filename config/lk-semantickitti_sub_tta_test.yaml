@@ -4,44 +4,44 @@ format_version: 1
 ###################
 ## Model options
 model_params:
-  model_architecture: "largekernelseg" #模型结构名称（如 largekernelseg），决定用哪个网络
+  model_architecture: "largekernelseg"
 
-  input_dims: 13 # 输入特征维度数
-  spatial_shape: # 体素空间的尺寸（点云体素化后的空间大小）
+  input_dims: 13
+  spatial_shape:
     - 2000
     - 2000
     - 120
-  scale_list: # 多尺度特征提取时用的尺度
+  scale_list:
     - 2
     - 4
     - 8
     - 16
-  hiden_size:  64  # 隐藏层通道数
-  num_classes: 20  # 分类类别数
-  large_kernel_size:   # 大卷积核的尺寸
+  hiden_size:  64
+  num_classes: 20
+  large_kernel_size:
     - 9
     - 9
     - 9
-  spatial_group_partition: # 空间分组的分界点
+  spatial_group_partition:
     - 0
     - 3
     - 6
     - 9
-  model_load_path: 'output_skitti/opensource_9ks_s030_w64_0.pt'   # 预训练模型权重文件路径
-  model_save_path: ''  # 训练时模型保存路径
+  model_load_path: 'output_skitti/opensource_9ks_s030_w64_0.pt' 
+  model_save_path: ''
 
 ###################
 ## Dataset options
 dataset_params:
-  training_size: 19130   # 训练集样本数
-  dataset_type: "point_semkitti_mix"  # 数据集类型（决定用哪个数据加载类）
-  pc_dataset_type: "SemKITTI_sk"     # 数据集类型（决定用哪个数据加载类）
-  collate_type: "mix_collate_fn_default"  # 数据加载时的拼接方式
-  ignore_label: 0      # 忽略的标签（如未标注点）
-  label_mapping: "./config/label_mapping/semantic-kitti-sub.yaml" # 标签映射配置文件路径
-  num_classes: 20  # 类别数
+  training_size: 19130
+  dataset_type: "point_semkitti_mix"
+  pc_dataset_type: "SemKITTI_sk"
+  collate_type: "mix_collate_fn_default"
+  ignore_label: 0
+  label_mapping: "./config/label_mapping/semantic-kitti-sub.yaml"
+  num_classes: 20
 
-  spatial_shape:  # 
+  spatial_shape:
     - 2000
     - 2000
     - 120
@@ -54,7 +54,7 @@ dataset_params:
     - -50
     - -50
     - -4
-  seg_labelweights:  # 各类别的损失权重（用于类别不平衡）
+  seg_labelweights:
     - 0
     - 55437630
     - 320797
@@ -76,9 +76,9 @@ dataset_params:
     - 4506626
     - 1168181
 
-  train_data_loader:
-    data_path: "/home/zrb/wicri/技术部/定位技术室/deep_learning/kitti/SemanticKITTI_Data/SemanticKitti/sequences/"
-    imageset: "train"
+  val_data_loader:
+    data_path: "/home/ubuntu/data/kitti/dataset/sequences/"
+    imageset: "test"
     rotate_aug: True
     flip_aug: True
     scale_aug: True
@@ -86,24 +86,7 @@ dataset_params:
     dropout_aug: False
     polarmix_aug: False
     mix_aug: False
-    instance_aug: False
-    SphereCrop: False
-    ShufflePoint: False
-    d_point_num: -1
-    batch_size: 4         # 你可以根据实际情况设置
-    num_workers: 4        # 你可以根据实际情况设置
-
-  val_data_loader: # 验证集的数据加载参数，包括数据路径、增强方式（旋转、翻转、缩放等）、是否打乱点顺序等
-    data_path: "/home/zrb/wicri/技术部/定位技术室/deep_learning/kitti/SemanticKITTI_Data/SemanticKitti/sequences/"
-    imageset: "val"
-    rotate_aug: True
-    flip_aug: True
-    scale_aug: True
-    transform_aug: True
-    dropout_aug: False
     polarmix_aug: False
-    mix_aug: False
-    # polarmix_aug: False
     instance_aug: False
     SphereCrop: False
     ShufflePoint: False
@@ -112,27 +95,27 @@ dataset_params:
 ###################
 ## Train params
 train_params:
-  seed: 1588147245  # 随机种子，保证实验可复现
-  max_num_epochs: 60  # 最大训练轮数
-  learning_rate: 0.005  # 初始学习率
-  optimizer: AdamW  # [SGD, Adam]  # 优化器类型（如 AdamW）
-  weight_decay: 0.02  # 权重衰减系数（正则化）
-  lr_scheduler:  OneCycleLR # 学习率调度策略 [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts, ] 
-  lambda_lovasz: 1  # Lovasz 损失的权重
-  eval_every_n_steps: 1999 #683 #597 #1195  # 每多少步评估一次
-  distributed: False  # 是否启用分布式训练（多卡）
-  amp_enabled: False # 是否启用混合精度训练（加速和省显存）
+  seed: 1588147245
+  max_num_epochs: 60
+  learning_rate: 0.005
+  optimizer: AdamW  # [SGD, Adam]
+  weight_decay: 0.02
+  lr_scheduler:  OneCycleLR # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts, ]
+  lambda_lovasz: 1
+  eval_every_n_steps: 1999 #683 #597 #1195
+  distributed: False
+  amp_enabled: False
 
 
 ###################
 ## Sparse params
 sparse_params:
-  use_sparse: True  # 是否启用稀疏训练（如稀疏卷积、稀疏权重）
-  growth: 'random' # 稀疏化策略（如如何生长/剪枝/重新分配权重）
+  use_sparse: True
+  growth: 'random'
   prune: 'magnitude'
   redistribution: 'none'
-  prune_rate: 0.3  # 剪枝比例和目标稀疏度
+  prune_rate: 0.3
   sparsity: 0.3
-  sparse_init: 'ERK'  # 稀疏初始化方法（如 ERK）
-  update_frequency: 8000  # 稀疏结构更新频率（多少步更新一次）
-  stop_sparse_epoch: 60   # 稀疏训练停止的 epoch
+  sparse_init: 'ERK'
+  update_frequency: 8000
+  stop_sparse_epoch: 60

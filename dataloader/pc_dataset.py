@@ -6,8 +6,6 @@ import pickle
 from pathlib import Path
 from nuscenes.utils import splits
 
-from st_data_help import load_semkitti_bin_with_spatio_temporal
-
 REGISTERED_PC_DATASET_CLASSES = {}
 
 
@@ -25,17 +23,14 @@ def get_pc_model_class(name):
     assert name in REGISTERED_PC_DATASET_CLASSES, f"available class: {REGISTERED_PC_DATASET_CLASSES}"
     return REGISTERED_PC_DATASET_CLASSES[name]
 
-
-
 @register_dataset
 class SemKITTI_sk(data.Dataset):
-    def __init__(self, data_path, imageset='train', label_mapping="waymo.yaml", num_vote=1,st_length=5):
+    def __init__(self, data_path, imageset='train', label_mapping="waymo.yaml", num_vote=1):
         with open(label_mapping, 'r') as stream:
             semkittiyaml = yaml.safe_load(stream)
         self.learning_map = semkittiyaml['learning_map']
         self.imageset = imageset
         self.num_vote = num_vote
-        self.st_length = st_length
         if imageset == 'train':
             split = semkittiyaml['split']['train']
         elif imageset == 'val':
@@ -44,59 +39,43 @@ class SemKITTI_sk(data.Dataset):
             split = semkittiyaml['split']['test']
         else:
             raise Exception('Split must be train/val/test')
-
+        print('imageset: ',imageset)
+        print('split: ',split)
+        print('num_vote: ',num_vote)
         self.im_idx = []
         for i_folder in split:
-            self.im_idx += absoluteFilePaths_vote(
-                '/'.join([data_path, str(i_folder).zfill(2), 'velodyne']), num_vote)
+            self.im_idx += absoluteFilePaths_vote('/'.join([data_path, str(i_folder).zfill(2), 'velodyne']), num_vote)
 
     def __len__(self):
         'Denotes the total number of samples'
         return len(self.im_idx)
 
-    # def __getitem__(self, index):
-    #     # 说明，self.im_idx[index]形为：path/00/velodyne/000000.bin
-    #     # 其中，path是数据集的根目录，00是序列号，
-    #     # velodyne是点云数据所在的文件夹，000000.bin是点
-        
-    #     raw_data = np.fromfile(
-    #         self.im_idx[index], dtype=np.float32).reshape((-1, 4))
-    #     xyz, feat = raw_data[:, :3], raw_data[:, 3:4]
-    #     origin_len = len(raw_data)
-
-    #     if self.imageset == 'test':
-    #         sem_data = np.expand_dims(np.zeros_like(
-    #             raw_data[:, 0], dtype=int), axis=1)
-    #         inst_data = np.expand_dims(np.zeros_like(
-    #             raw_data[:, 0], dtype=np.uint32), axis=1)
-    #     else:
-    #         annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
-    #                                      dtype=np.uint32).reshape((-1, 1))
-
-    #         sem_data = annotated_data & 0xFFFF  # delete high 16 digits binary
-    #         sem_data = np.vectorize(self.learning_map.__getitem__)(sem_data)
-    #         inst_data = annotated_data >> 16
-
-    #         # annotated_data 是从 .label 文件读出来的，每个点一个 32 位无符号整数。
-    #         # 这 32 位里，低 16 位是语义标签，高 16 位是实例标签。
-    #         # & 0xFFFF 作用是只保留低 16 位，即语义标签部分。
-
-    #     origin_len = len(xyz)
-
-    #     data_dict = {}
-    #     data_dict['xyz'] = xyz
-    #     data_dict['labels'] = sem_data.astype(np.uint8)
-    #     data_dict['instance_label'] = inst_data
-    #     data_dict['signal'] = feat
-    #     data_dict['origin_len'] = origin_len
-
-    #     return data_dict, self.im_idx[index]
-    
     def __getitem__(self, index):
-        data_dict=load_semkitti_bin_with_spatio_temporal(
-            self.im_idx[index], self.learning_map, imageset=self.imageset, length=self.st_length)
+        raw_data = np.fromfile(self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+        xyz, feat = raw_data[:, :3], raw_data[:, 3:4]
+        origin_len = len(raw_data)
+
+        if self.imageset == 'test':
+            sem_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
+            inst_data = np.expand_dims(np.zeros_like(raw_data[:,0], dtype=np.uint32),axis=1)
+        else:
+            annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
+                                            dtype=np.uint32).reshape((-1, 1))
+
+            sem_data = annotated_data & 0xFFFF  # delete high 16 digits binary
+            sem_data = np.vectorize(self.learning_map.__getitem__)(sem_data)
+            inst_data = annotated_data >> 16
+
+        origin_len = len(xyz)
+
+        data_dict = {}
+        data_dict['xyz'] = xyz
+        data_dict['labels'] = sem_data.astype(np.uint8)
+        data_dict['instance_label'] = inst_data
+        data_dict['signal'] = feat
+        data_dict['origin_len'] = origin_len
+
         return data_dict, self.im_idx[index]
-        
 
 
 @register_dataset
@@ -129,12 +108,10 @@ class nuScenes(data.Dataset):
         self.get_available_scenes()
         available_scene_names = [s['name'] for s in self.available_scenes]
         scenes = list(filter(lambda x: x in available_scene_names, scenes))
-        scenes = set(
-            [self.available_scenes[available_scene_names.index(s)]['token'] for s in scenes])
+        scenes = set([self.available_scenes[available_scene_names.index(s)]['token'] for s in scenes])
         self.get_path_infos_cam_lidar(scenes)
 
-        print('Total %d scenes in the %s split' %
-              (len(self.token_list), imageset))
+        print('Total %d scenes in the %s split' % (len(self.token_list), imageset))
 
     def __len__(self):
         'Denotes the total number of samples'
@@ -167,10 +144,8 @@ class nuScenes(data.Dataset):
         for scene in self.nusc.scene:
             scene_token = scene['token']
             scene_rec = self.nusc.get('scene', scene_token)
-            sample_rec = self.nusc.get(
-                'sample', scene_rec['first_sample_token'])
-            sd_rec = self.nusc.get(
-                'sample_data', sample_rec['data']['LIDAR_TOP'])
+            sample_rec = self.nusc.get('sample', scene_rec['first_sample_token'])
+            sd_rec = self.nusc.get('sample_data', sample_rec['data']['LIDAR_TOP'])
             has_more_frames = True
             scene_not_exist = False
             while has_more_frames:
@@ -203,9 +178,9 @@ class nuScenes(data.Dataset):
                     )
 
     def __getitem__(self, index):
-        pointcloud, sem_label, instance_label, lidar_sample_token = self.loadDataByIndex(
-            index)
+        pointcloud, sem_label, instance_label, lidar_sample_token = self.loadDataByIndex(index)
         sem_label = np.vectorize(self.learning_map.__getitem__)(sem_label)
+
 
         data_dict = {}
         data_dict['xyz'] = pointcloud[:, :3]
@@ -223,14 +198,12 @@ def absoluteFilePaths(directory):
         for f in filenames:
             yield os.path.abspath(os.path.join(dirpath, f))
 
-
 def absoluteFilePaths_vote(directory, num_vote):
     for dirpath, _, filenames in os.walk(directory):
         filenames.sort()
         for f in filenames:
             for _ in range(num_vote):
                 yield os.path.abspath(os.path.join(dirpath, f))
-
 
 def SemKITTI2train(label):
     if isinstance(label, list):
@@ -246,7 +219,6 @@ def SemKITTI2train_single(label):
     return label
 
 # load Semantic KITTI class info
-
 
 def get_SemKITTI_label_name(label_mapping):
     with open(label_mapping, 'r') as stream:
