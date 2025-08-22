@@ -56,16 +56,28 @@ def build(configs, model):
                 three_phase=False,
                 last_epoch=-1,
                 verbose=False)
+    # elif configs['train_params']["lr_scheduler"] == 'CosineAnnealingWarmRestarts':
+    #     from functools import partial
+    #     lr_scheduler = LambdaLR(
+    #         optimizer, lr_lambda=partial(
+    #             cosine_schedule_with_warmup,
+    #             num_epochs=configs['train_params']['max_num_epochs'],
+    #             batch_size=configs['dataset_params']['train_data_loader']['batch_size'],
+    #             dataset_size=configs['dataset_params']['training_size'],
+    #             num_gpu=configs.train_params.world_size
+    #         )
+    #     )
     elif configs['train_params']["lr_scheduler"] == 'CosineAnnealingWarmRestarts':
-        from functools import partial
-        lr_scheduler = LambdaLR(
-            optimizer, lr_lambda=partial(
-                cosine_schedule_with_warmup,
-                num_epochs=configs['train_params']['max_num_epochs'],
-                batch_size=configs['dataset_params']['train_data_loader']['batch_size'],
-                dataset_size=configs['dataset_params']['training_size'],
-                num_gpu=configs.train_params.world_size
-            )
+        # 支持从yaml读取调度器参数
+        lr_scheduler_params = configs['train_params'].get('lr_scheduler_params', {})
+        T_0 = lr_scheduler_params.get('T_0', 10)
+        T_mult = lr_scheduler_params.get('T_mult', 2)
+        eta_min = lr_scheduler_params.get('eta_min', 1e-6)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer,
+            T_0=T_0,
+            T_mult=T_mult,
+            eta_min=eta_min
         )
     elif configs['train_params']["lr_scheduler"] == 'None':
         return optimizer, None

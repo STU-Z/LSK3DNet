@@ -60,6 +60,39 @@ shutil.copy('network/largekernel_model.py', str(exp_dir))
 shutil.copy('utils/erk_sparse_core.py', str(exp_dir))
 shutil.copy('config/lk-semantickitti_erk_finetune.yaml', str(exp_dir))
 
+# 要拷贝的源文件夹列表
+source_dirs = ['network', 'dataloader', 'builder', 'utils', 'config']
+target_dir = exp_dir  # 假设exp_dir已定义
+
+# 确保目标文件夹存在
+os.makedirs(target_dir, exist_ok=True)
+
+# 遍历每个源文件夹
+for source_dir in source_dirs:
+    # 检查源文件夹是否存在
+    if not os.path.isdir(source_dir):
+        print(f"警告：{source_dir} 不存在或不是文件夹，跳过")
+        continue
+    
+    # 在目标目录下创建对应的文件夹
+    target_subdir = os.path.join(target_dir, source_dir)
+    os.makedirs(target_subdir, exist_ok=True)
+    
+    # 拷贝源文件夹中的所有内容到目标子文件夹
+    for item in os.listdir(source_dir):
+        source_item = os.path.join(source_dir, item)
+        target_item = os.path.join(target_subdir, item)
+        
+        # 处理文件
+        if os.path.isfile(source_item):
+            shutil.copy2(source_item, target_item)
+        # 处理子文件夹
+        elif os.path.isdir(source_item):
+            if os.path.exists(target_item):
+                shutil.rmtree(target_item)
+            shutil.copytree(source_item, target_item)
+
+print("拷贝完成")
 
 def main(configs):
     configs.nprocs = torch.cuda.device_count()#表示当前机器上可用的GPU数量

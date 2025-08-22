@@ -2,7 +2,7 @@
 Author: Zhangrunbang 254616730@qq.com
 Date: 2025-06-29 21:27:09
 LastEditors: Zhangrunbang 254616730@qq.com
-LastEditTime: 2025-07-14 21:48:20
+LastEditTime: 2025-07-16 16:21:55
 FilePath: /LSK3DNet/dataloader/label_stastic.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -28,7 +28,7 @@ label_count_raw = defaultdict(int)
 # 统计映射后标签
 label_count_mapped = defaultdict(int)
 
-label_files = sorted(os.listdir(label_dir))
+label_files = sorted(os.listdir(label_dir)) # ground_truth labels
 for fname in label_files:
     if not fname.endswith('.label'):
         continue

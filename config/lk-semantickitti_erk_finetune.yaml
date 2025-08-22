@@ -178,6 +178,10 @@ train_params:
   use_focal: False
   focal_gamma: 2.0
   dice_weight: 1.0
+  lr_scheduler_params:   #（对应CosineAnnealingWarmRestarts）
+    T_0: 10  # 第一个周期长度（单位：epoch），常用10~30
+    T_mult: 2  # 每次restart后周期长度倍增，常用1或2
+    eta_min: 0.0001  # 最小学习率，建议为初始学习率的1/100~1/1000
 
 ###################
 ## Sparse params
@@ -192,3 +196,4 @@ sparse_params:
   update_frequency: 2000 #8000
   sort_frequency: 12000
   stop_sparse_epoch: 60000
+  outchannels: 64

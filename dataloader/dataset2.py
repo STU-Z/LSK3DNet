@@ -188,13 +188,13 @@ class point_semkitti_mix(data.Dataset):
         st_instance_label=spatio_temporal_data['instance_label']
         st_labels=spatio_temporal_data['labels']
         
-                # 单样本预处理（get_single_sample）
-        # 空间裁剪：只保留在指定空间范围内的点。
-        # CutMix/Polarmix：可选的数据混合增强。
-        # 随机丢点：模拟点云稀疏性。
-        # 旋转、翻转、缩放、平移：常规点云增强。
-        # 法向量计算：为每个点计算法向量特征。
-        # 组装输出：将所有特征、标签、索引等打包成字典。
+        # 单样本预处理（get_single_sample）
+        # 空间裁剪：只保留在指定空间范围内的点
+        # CutMix/Polarmix：可选的数据混合增强
+        # 随机丢点：模拟点云稀疏性
+        # 旋转、翻转、缩放、平移：常规点云增强
+        # 法向量计算：为每个点计算法向量特征
+        # 组装输出：将所有特征、标签、索引等打包成字典
         if self.polarcutmix and np.random.rand() < self.polarcutmix_prob and self.point_cloud_dataset.imageset == 'train':  # 修改，增加 polarmix 概率
             # 如果启用 polarmix 增强，会随机选取另一个样本，将当前样本和另一个样本在极坐标空间内做混合（polarmix），以增强数据多样性。
             random_integer = np.random.randint(
@@ -205,11 +205,20 @@ class point_semkitti_mix(data.Dataset):
             alpha = (np.random.random() - 1) * np.pi
             beta = alpha + np.pi
 
-            # 这个函数作了两个增强， 一是扇区拼接替换，二是进行了指定的角度旋转
-            xyz, labels = polarmix(xyz, labels, extra_data['xyz'], extra_data['labels'],
-                                   alpha=alpha, beta=beta,
-                                   instance_classes=instance_classes,
-                                   Omega=Omega)
+            # # 这个函数作了两个增强， 一是扇区拼接替换，二是进行了指定的角度旋转
+            # xyz, labels = polarmix(xyz, labels, extra_data['xyz'], extra_data['labels'],
+            #                        alpha=alpha, beta=beta,
+            #                        instance_classes=instance_classes,
+            #                        Omega=Omega)
+            # 增强所有类别
+            xyz, labels, instance_label, sig = polarmix(
+                xyz, labels, instance_label, sig,
+                extra_data['xyz'], extra_data['labels'], extra_data['instance_label'], extra_data['signal'],
+                alpha=alpha, beta=beta,
+                instance_classes=instance_classes,
+                Omega=Omega,
+                target_classes=None
+            )
             
         ref_pc = xyz.copy()
         ref_labels = labels.copy()
@@ -362,15 +371,35 @@ class point_semkitti_mix(data.Dataset):
             alpha = (np.random.random() - 1) * np.pi
             beta = alpha + np.pi
 
-            # 这个函数作了两个增强， 一是扇区拼接替换，二是进行了指定的角度旋转
-            xyz, labels = polarmix(xyz, labels, extra_data['xyz'], extra_data['labels'],
-                                   alpha=alpha, beta=beta,
-                                   instance_classes=instance_classes,
-                                   Omega=Omega)
+            # # 这个函数作了两个增强， 一是扇区拼接替换，二是进行了指定的角度旋转
+            # xyz, labels = polarmix(xyz, labels, extra_data['xyz'], extra_data['labels'],
+            #                        alpha=alpha, beta=beta,
+            #                        instance_classes=instance_classes,
+            #                        Omega=Omega)
+            
+            # 增强所有类别
+            xyz, labels, instance_label, sig = polarmix(
+                xyz, labels, instance_label, sig,
+                extra_data['xyz'], extra_data['labels'], extra_data['instance_label'], extra_data['signal'],
+                alpha=alpha, beta=beta,
+                instance_classes=instance_classes,
+                Omega=Omega,
+                target_classes=None
+            )
+            # # 增强指定类别
+            # xyz, labels, instance_label, sig = polarmix(
+            #     xyz, labels, instance_label, sig,
+            #     extra_data['xyz'], extra_data['labels'], extra_data['instance_label'], extra_data['signal'],
+            #     alpha=alpha, beta=beta,
+            #     instance_classes=instance_classes,
+            #     Omega=Omega,
+            #     target_classes=[1,2,3]
+            # )
 
         ref_pc = xyz.copy()
         ref_labels = labels.copy()
         ref_index = np.arange(len(ref_pc))
+        sig = sig.reshape(-1, 1)
 
         # 布尔值，逻辑且运算
         mask_x = np.logical_and(
@@ -449,6 +478,10 @@ class point_semkitti_mix(data.Dataset):
         feat = np.concatenate((xyz, sig), axis=1)
 
         unproj_normal_data = compute_normals_range(feat)
+        
+        # 这里可以添加时间通道
+        # time_channel = np.zeros((feat.shape[0], 1), dtype=feat.dtype)
+        # feat = np.concatenate((feat, time_channel), axis=1)
 
         data_dict = {}
         data_dict['point_feat'] = feat  # 对点数据增广后的点云
@@ -486,11 +519,17 @@ class point_semkitti_mix(data.Dataset):
             bin_path = data_roots[idx]
             # pose = poses[idx]
             Tr = calib_poses[idx]
-
+            
             labels = np.fromfile(labels_paths[idx], dtype=np.uint32)
             # 读取bin文件
             raw_data = np.fromfile(bin_path, dtype=np.float32).reshape((-1, 4))
             points, feat = raw_data[:, :3], raw_data[:, 3:4]
+            
+            # 增加时间通道
+            time_channel_data=len(data_roots)-idx
+            time_channel = np.full((points.shape[0], 1), time_channel_data, dtype=np.float32)
+            points = np.concatenate((points, time_channel), axis=1)
+            
             # # 空间范围筛选
 
             # mask = (
@@ -719,12 +758,16 @@ class point_semkitti_mix(data.Dataset):
 
         feat = np.concatenate((xyz, sig), axis=1)
         unproj_normal_data = compute_normals_range(feat)
+        
+        # 这里可以添加时间通道
+        # time_channel = np.zeros((feat.shape[0], 1), dtype=feat.dtype)
+        # feat = np.concatenate((feat, time_channel), axis=1)
 
         data_dict = {}
         data_dict['point_feat'] = feat
         data_dict['point_label'] = labels
-        data_dict['ref_xyz'] = ref_pc
-        data_dict['ref_label'] = ref_labels
+        data_dict['ref_xyz'] = ref_pc  # useless
+        data_dict['ref_label'] = ref_labels  # useless
         data_dict['ref_index'] = ref_index
         data_dict['point_num'] = point_num
         data_dict['origin_len'] = origin_len
@@ -754,15 +797,15 @@ def mix_collate_fn_default(data):
     return {
         'points': torch.cat(points).float(),
         'normal': torch.cat(normal).float(),
-        'ref_xyz': torch.cat(ref_xyz).float(),
+        'ref_xyz': torch.cat(ref_xyz).float(),  # useless
         'batch_idx': torch.cat(b_idx).long(),
         'batch_size': batch_size,
         'labels': torch.cat(labels).long().squeeze(1),
-        'raw_labels': torch.from_numpy(ref_labels).long(),
+        'raw_labels': torch.from_numpy(ref_labels).long(), # useless
         'origin_len': origin_len,
-        'indices': torch.cat(ref_indices).long(),
-        'path': path,
-        'point_num': point_num,
+        'indices': torch.cat(ref_indices).long(), # useless
+        'path': path,     # useless
+        'point_num': point_num, # useless
     }
 
 @register_collate_fn
@@ -792,21 +835,21 @@ def mix_collate_fn_with_spatio_temporal_data(data):
     return {
         'points': torch.cat(points).float(),
         'normal': torch.cat(normal).float(),
-        'ref_xyz': torch.cat(ref_xyz).float(),
+        'ref_xyz': torch.cat(ref_xyz).float(),  # useless
         'batch_idx': torch.cat(b_idx).long(),
         'batch_size': batch_size,
         'labels': torch.cat(labels).long().squeeze(1),
-        'raw_labels': torch.from_numpy(ref_labels).long(),
+        'raw_labels': torch.from_numpy(ref_labels).long(), # useless
         'origin_len': origin_len,
-        'indices': torch.cat(ref_indices).long(),
-        'path': path,
-        'point_num': point_num,
+        'indices': torch.cat(ref_indices).long(),  # useless
+        'path': path,   # useless
+        'point_num': point_num, # useless
         # 新增st相关
         'st_points': torch.cat(st_points).float(),
         'st_labels': torch.cat(st_labels).long().squeeze(1),
         'st_normal': torch.cat(st_normal).float(),
         'st_batch_idx': torch.cat(st_b_idx).long(),
-        'st_point_num': [d['st_point_num'] for d in data],
+        'st_point_num': [d['st_point_num'] for d in data],  # useless
     }
 
 @register_dataset

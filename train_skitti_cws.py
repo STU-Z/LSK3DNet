@@ -115,7 +115,7 @@ def main_worker(local_rank, nprocs, configs):
 
     my_model = get_model_class(model_config['model_architecture'])(configs)
     
-    validation_model_for_cws=get_model_class(model_config['model_architecture'])(configs)
+    # validation_model_for_cws=get_model_class(model_config['model_architecture'])(configs)
     
 
     if train_hypers['distributed']:
@@ -166,7 +166,7 @@ def main_worker(local_rank, nprocs, configs):
                        growth_mode=sparse_config['growth'], redistribution_mode=sparse_config['redistribution'],
                        fp16=train_hypers['amp_enabled'], update_frequency=sparse_config['update_frequency'],sort_frequency=sparse_config['sort_frequency'],
                        sparsity=sparse_config['sparsity'], sparse_init=sparse_config['sparse_init'],
-                       device=train_hypers.local_rank, distributed=train_hypers['distributed'], stop_iter=sparse_config['stop_sparse_epoch'])
+                       device=train_hypers.local_rank, distributed=train_hypers['distributed'], stop_iter=sparse_config['stop_sparse_epoch'],)
         try:
             mask.add_module(my_model, pre_weight)
         except:
@@ -205,10 +205,10 @@ def main_worker(local_rank, nprocs, configs):
             if global_iter % check_iter == 0 and global_iter != 0:  # 判断是否到验证步
                 torch.cuda.empty_cache()
                 my_model.eval()  # 模型切换到 eval 模式
-                validation_model_for_cws.eval()  # 验证模型也切换到 eval 模式
-                mask.copy_module_params(my_model, validation_model_for_cws)  # 将稀疏掩码参数复制到验证模型
-                mask.sort_channels(validation_model_for_cws)  # 对验证模型进行通道排序
-                mask.select_channels(validation_model_for_cws)  # 选择通道
+                # validation_model_for_cws.eval()  # 验证模型也切换到 eval 模式
+                # mask.copy_module_params(my_model, validation_model_for_cws)  # 将稀疏掩码参数复制到验证模型
+                # mask.sort_channels(validation_model_for_cws)  # 对验证模型进行通道排序
+                # mask.select_channels(validation_model_for_cws)  # 选择通道
                 hist_list = []
                 val_loss_list = []
                 total_time = 0
@@ -229,7 +229,7 @@ def main_worker(local_rank, nprocs, configs):
                         torch.cuda.synchronize()
                         start = time.time()
                         # val_data_dict = my_model(val_data_dict)
-                        val_data_dict = validation_model_for_cws(val_data_dict)
+                        val_data_dict = my_model(val_data_dict)
                         
                         torch.cuda.synchronize()
                         end = time.time()
@@ -363,7 +363,7 @@ def main_worker(local_rank, nprocs, configs):
                     4.用 scaler.update() 更新缩放因子
                     '''
                     mask.scaler.step(mask.optimizer)
-                    mask.step_cws()
+                    mask.step_cws(module=my_model) # 更新稀疏掩码参数
                     mask.scaler.update()
                     scale = mask.scaler.get_scale()
                     skip_lr_sched = (scale != mask.scaler.get_scale())
@@ -375,7 +375,7 @@ def main_worker(local_rank, nprocs, configs):
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(
                         parameters=my_model.parameters(), max_norm=0.25)
-                    mask.step_cws()
+                    mask.step_cws(module=my_model)
                     if not sche_epoch_update:
                         scheduler.step()
             else:

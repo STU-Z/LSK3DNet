@@ -5,11 +5,68 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+
+class MaskedSubMConv3d(spconv.SubMConv3d):
+    def __init__(self, in_channels, out_channels, kernel_size, indice_key=None, bias=False):
+        super().__init__(in_channels, out_channels, kernel_size, indice_key=indice_key, bias=bias)
+        # 掩码参数，和weight同shape
+        self.mask = nn.Parameter(torch.ones_like(self.weight), requires_grad=True)
+
+    def forward(self, input):
+        # 使用临时变量计算加权后的权重
+        weighted_weight = self.weight * self.mask
+        # 调用父类的 forward 方法，并传入加权后的权重
+        return F.SubMConv3d(input.features, weighted_weight, bias=self.bias, stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups)
+    
+class MaskedSubMConv3dWithSparity(spconv.SubMConv3d):
+    # def __init__(self, in_channels, out_channels, kernel_size, indice_key=None, bias=False, sparsity=0.7):
+    #     super().__init__(in_channels, out_channels, kernel_size, indice_key=indice_key, bias=bias)
+    #     # 随机生成掩码，稀疏率为 sparsity
+    #     mask = torch.ones_like(self.weight)
+    #     num_elements = mask.numel()
+    #     num_zero = int(num_elements * sparsity)
+    #     # 随机选取 num_zero 个元素置为 0
+    #     idx = torch.randperm(num_elements)[:num_zero]
+    #     mask.view(-1)[idx] = 0
+    #     self.mask = nn.Parameter(mask, requires_grad=True)
+    def __init__(self, in_channels, out_channels, kernel_size, indice_key=None, bias=False, sparsity=0.7, erk_power_scale=1.0):
+        super().__init__(in_channels, out_channels, kernel_size, indice_key=indice_key, bias=bias)
+        # ERK初始化
+        mask = torch.ones_like(self.weight)
+        shape = mask.shape
+        n_param = mask.numel()
+        # ERK概率计算
+        erk_prob = (sum(shape) / np.prod(shape)) ** erk_power_scale
+        epsilon = sparsity / erk_prob
+        prob_one = min(epsilon * erk_prob, 1.0)
+        mask[:] = (torch.rand(mask.shape) < prob_one).float()
+        
+        # 死通道保护：每行/每列至少一个1
+        for i in range(mask.shape[0]):
+            if mask[i].sum() == 0:
+                idx = torch.randint(0, mask.shape[1], (1,))
+                mask[i, idx] = 1.0
+        for j in range(mask.shape[1]):
+            if mask[:, j].sum() == 0:
+                idx = torch.randint(0, mask.shape[0], (1,))
+                mask[idx, j] = 1.0
+        
+        
+        self.mask = nn.Parameter(mask, requires_grad=True)
+
+    def forward(self, input):
+        self.weight = self.weight * self.mask
+        return super().forward(input)
+
 class SparseBasicBlock(spconv.SparseModule):
     def __init__(self, large_kernel, in_channels, out_channels, indice_key):
         super(SparseBasicBlock, self).__init__()
+        # self.layers_in = spconv.SparseSequential(
+        #     spconv.SubMConv3d(in_channels, out_channels, 1, indice_key=indice_key, bias=False),
+        #     nn.BatchNorm1d(out_channels),
+        # )
         self.layers_in = spconv.SparseSequential(
-            spconv.SubMConv3d(in_channels, out_channels, 1, indice_key=indice_key, bias=False),
+            MaskedSubMConv3d(in_channels, out_channels, 1, indice_key=indice_key, bias=False),
             nn.BatchNorm1d(out_channels),
         )
         '''
